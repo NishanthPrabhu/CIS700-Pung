@@ -3,6 +3,8 @@
 #include <sstream>
 #include <vector>
 #include "server_info.h"
+#include "master_callbacks.h"
+#include "rpc/server.h"
 #include <boost/algorithm/string.hpp>
 
 std::vector<server_info> slaves; // Global vector to hold slave servers information
@@ -10,7 +12,7 @@ std::vector<server_info> slaves; // Global vector to hold slave servers informat
 server_info* get_master_server(std::string server_file) {
 	std::ifstream filereader(server_file);
 	std::string line;
-  server_info *info = NULL;
+  	server_info *info = NULL;
 
 	if (filereader.is_open()) {
 		while (std::getline(filereader, line)) {
@@ -26,7 +28,7 @@ server_info* get_master_server(std::string server_file) {
 				server_info client(tokens[0], tokens[1], std::stoi(tokens[2]));
 				slaves.push_back(client);
 			  continue;
-      }
+      		}
 
 			info = new server_info(tokens[0], tokens[1], std::stoi(tokens[2]));
 		}
@@ -39,9 +41,16 @@ server_info* get_master_server(std::string server_file) {
 	return info;
 }
 
-void start_master_server() {
+void start_master_server(server_info *info) {
+	int port = info->get_port();
+	rpc::server srv(port);
 
-
+	srv.bind("register_client", &register_client); // Client registers itself with pung server
+	srv.bind("set_client_key", &set_client_public_key); // Client sends it's public key
+	srv.bind("get_client_key", &get_client_public_key); // Client receives another's public key
+	srv.bind("store_message", &store_client_message); // Client sends message to store
+	srv.bind("retrieve_message", &retrieve_client_message); // Client retrieves message
+	srv.run(); // Change this to async?
 }
 
 int main(int argc, char **argv) {
@@ -52,5 +61,5 @@ int main(int argc, char **argv) {
 
 	std::string server_file = argv[1];
 	server_info* info = get_master_server(server_file);
-	start_master_server();
+	start_master_server(info);
 }
