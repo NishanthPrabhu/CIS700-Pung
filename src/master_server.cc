@@ -10,6 +10,7 @@ std::vector<server_info> slaves; // Global vector to hold slave servers informat
 server_info* get_master_server(std::string server_file) {
 	std::ifstream filereader(server_file);
 	std::string line;
+  server_info *info = NULL;
 
 	if (filereader.is_open()) {
 		while (std::getline(filereader, line)) {
@@ -24,10 +25,10 @@ server_info* get_master_server(std::string server_file) {
 			if (tokens[0].compare("master")) {
 				server_info client(tokens[0], tokens[1], std::stoi(tokens[2]));
 				slaves.push_back(client);
-			}
+			  continue;
+      }
 
-			server_info* info = new server_info(tokens[0], tokens[1], std::stoi(tokens[2]));
-			return info;
+			info = new server_info(tokens[0], tokens[1], std::stoi(tokens[2]));
 		}
 		filereader.close();
 	} else {
@@ -35,7 +36,7 @@ server_info* get_master_server(std::string server_file) {
 		exit(1);
 	}
 
-	return NULL;
+	return info;
 }
 
 void start_master_server() {
