@@ -5,9 +5,8 @@
 #include "server_info.h"
 #include "master_callbacks.h"
 #include "rpc/server.h"
+#include "master_server.h"
 #include <boost/algorithm/string.hpp>
-
-std::vector<server_info> slaves; // Global vector to hold slave servers information
 
 server_info* get_master_server(std::string server_file) {
 	std::ifstream filereader(server_file);
@@ -41,6 +40,13 @@ server_info* get_master_server(std::string server_file) {
 	return info;
 }
 
+int get_slave_index() {
+	int slave_index = load_balancer_index;
+	auto size = slaves.size();
+	load_balancer_index = (load_balancer_index + 1) % (int)size;
+	return slave_index;
+}
+
 void start_master_server(server_info *info) {
 	int port = info->get_port();
 	rpc::server srv(port);
@@ -59,6 +65,7 @@ int main(int argc, char **argv) {
 		exit(1);
 	}
 
+	load_balancer_index = 0;
 	std::string server_file = argv[1];
 	server_info* info = get_master_server(server_file);
 	start_master_server(info);

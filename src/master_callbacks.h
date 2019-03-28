@@ -5,7 +5,9 @@
 #ifndef CIS700_PUNG_MASTER_CALLBACKS_H
 #define CIS700_PUNG_MASTER_CALLBACKS_H
 
-bool set_client_public_key(int client_id, std::string key);
+#define LIBSODIUM_PUBLICKEY_LENGTH 32
+
+bool set_client_public_key(int client_id, std::string);
 std::string get_client_public_key(std::string client_id);
 bool register_client(int client_id);
 bool store_client_message(std::string message);
