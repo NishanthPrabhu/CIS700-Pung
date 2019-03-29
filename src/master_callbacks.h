@@ -9,8 +9,7 @@
 
 bool set_client_public_key(int client_id, std::string);
 std::string get_client_public_key(std::string client_id);
-bool register_client(int client_id);
-bool store_client_message(std::string message);
+bool store_client_message(std::string label, std::string message);
 std::string retrieve_client_message();
 
 #endif //CIS700_PUNG_MASTER_CALLBACKS_H

@@ -51,7 +51,6 @@ void start_master_server(server_info *info) {
 	int port = info->get_port();
 	rpc::server srv(port);
 
-	srv.bind("register_client", &register_client); // Client registers itself with pung server
 	srv.bind("set_client_key", &set_client_public_key); // Client sends it's public key
 	srv.bind("get_client_key", &get_client_public_key); // Client receives another's public key
 	srv.bind("store_message", &store_client_message); // Client sends message to store
