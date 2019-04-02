@@ -34,14 +34,17 @@ void set_and_propagate_client_public_key(int client_id, std::string publickey) {
 }
 
 std::string get_public_key(std::string client_id) {
-	// TODO get from local map and return
 	std::string result;
-	return result;
+	if (keys_map.count(stoi(client_id)) > 0) {
+		return keys_map[stoi(client_id)];
+	}
+
+	return "";
 }
 
 bool store_message(std::string label, std::string message) {
-	// TODO Store message in local message map
 	bool result;
+	// TODO store messages in map or vector (if vector, how to find label/index?)
 	return result;
 }
 
