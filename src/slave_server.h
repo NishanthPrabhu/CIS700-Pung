@@ -9,8 +9,7 @@
 #ifndef CIS700_PUNG_SLAVE_SERVER_H
 #define CIS700_PUNG_SLAVE_SERVER_H
 
-static std::vector<server_info> slaves; // Global vector to hold slave servers information
-static std::string slave_name;
-static std::map<int, std::string> keys_map;
+extern std::vector<server_info> slaves; // Global vector to hold slave servers information
+extern std::string slave_name;
 
 #endif //CIS700_PUNG_SLAVE_SERVER_H

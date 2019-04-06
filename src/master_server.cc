@@ -8,6 +8,8 @@
 #include "master_server.h"
 #include <boost/algorithm/string.hpp>
 
+std::vector<server_info> slaves;
+
 server_info* get_master_server(std::string server_file) {
 	std::ifstream filereader(server_file);
 	std::string line;
@@ -25,7 +27,8 @@ server_info* get_master_server(std::string server_file) {
 
 			if (tokens[0].compare("master")) {
 				server_info client(tokens[0], tokens[1], std::stoi(tokens[2]));
-				slaves.push_back(client);
+                std::cout<<"Adding slave: " + tokens[0] << std::endl;
+                slaves.push_back(client);
 			  continue;
       		}
 
@@ -44,7 +47,8 @@ int get_slave_index() {
 	int slave_index = load_balancer_index;
 	auto size = slaves.size();
 	load_balancer_index = (load_balancer_index + 1) % (int)size;
-	return slave_index;
+    std::cout << "Choosing slave: " << slave_index << std::endl;
+    return slave_index;
 }
 
 void start_master_server(server_info *info) {
@@ -55,7 +59,9 @@ void start_master_server(server_info *info) {
 	srv.bind("get_client_key", &get_client_public_key); // Client receives another's public key
 	srv.bind("store_message", &store_client_message); // Client sends message to store
 	srv.bind("retrieve_message", &retrieve_client_message); // Client retrieves message
-	srv.run(); // Change this to async?
+	//srv.run(); // Change this to async?
+    srv.async_run(1);
+     std::cin.ignore();
 }
 
 int main(int argc, char **argv) {

@@ -8,6 +8,9 @@
 #include "slave_server.h"
 #include <boost/algorithm/string.hpp>
 
+std::vector<server_info> slaves;
+std::string slave_name;
+
 server_info* get_slave_server(std::string server_file, std::string server_name) {
 	std::ifstream filereader(server_file);
 	std::string line;

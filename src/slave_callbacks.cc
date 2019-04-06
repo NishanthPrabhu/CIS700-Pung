@@ -8,6 +8,8 @@
 #include "server_info.h"
 #include "rpc/client.h"
 
+std::map<int, std::string> keys_map;
+
 /**
  *
  * @param client_id
