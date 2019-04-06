@@ -19,13 +19,14 @@
  * Size is 32 bytes, so unpacking into a unsigned char array ourselves is easy.
  */
 bool set_client_public_key(int client_id, std::string publickey) {
+	std::cout<<"Setting public key";
   	int slave_index = get_slave_index();
   	std::string slave_ip = slaves[slave_index].get_server_ip();
   	int port = slaves[slave_index].get_port();
   
-  	rpc::client client(slave_ip, port);
-  	auto result = client.call("set_client_key", client_id, publickey).as<bool>();
-  	return result;
+  	//rpc::client client(slave_ip, port);
+  	//client.call("set_client_key", client_id, publickey);
+  	return true;
 }
 
 std::string get_client_public_key(std::string client_id) {
