@@ -11,11 +11,11 @@ if(Boost_FOUND)
     include_directories(${Boost_INCLUDE_DIRS})
 endif()
 
-include_directories("/Users/nishanth/Documents/Penn/rpclib/include")
-
 set(CMAKE_BUILD_TYPE Debug)
 
-set(rpclib_LIBRARIES "/Users/nishanth/Documents/Penn/rpclib/build/librpc.a")
+set(rpclib_LIBRARIES "/home/vagrant/rpclib/build/librpc.a")
+
+include_directories("/home/vagrant/rpclib/include")
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../bin)
 
@@ -30,13 +30,13 @@ add_executable(slave_server ${SLAVE_SOURCE_FILES})
 add_executable(test_master src/test_master.cc)
 
 if(Boost_FOUND)
-  target_link_libraries(master_server ${Boost_LIBRARIES} ${rpclib_LIBRARIES})
+    target_link_libraries(master_server ${Boost_LIBRARIES} ${rpclib_LIBRARIES} pthread)
 endif()
 
 if(Boost_FOUND)
-    target_link_libraries(slave_server ${Boost_LIBRARIES} ${rpclib_LIBRARIES})
+    target_link_libraries(slave_server ${Boost_LIBRARIES}  ${rpclib_LIBRARIES} pthread)
 endif()
 
 if(Boost_FOUND)
-    target_link_libraries(test_master ${Boost_LIBRARIES} ${rpclib_LIBRARIES})
+    target_link_libraries(test_master ${Boost_LIBRARIES}  ${rpclib_LIBRARIES} pthread)
 endif()
