@@ -21,7 +21,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../bin)
 
 set(MASTER_SOURCE_FILES src/master_server.cc src/master_callbacks.cc src/server_info.cc src/server_info.h src/master_callbacks.h src/master_server.h)
 
-set(SLAVE_SOURCE_FILES src/slave_server.cc src/slave_server.h src/server_info.cc src/server_info.h src/slave_callbacks.cc src/slave_callbacks.h)
+set(SLAVE_SOURCE_FILES src/client_info.cc src/client_info.h src/slave_server.cc src/slave_server.h src/server_info.cc src/server_info.h src/slave_callbacks.cc src/slave_callbacks.h)
 
 add_executable(master_server ${MASTER_SOURCE_FILES})
 

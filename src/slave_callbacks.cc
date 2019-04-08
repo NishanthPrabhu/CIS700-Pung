@@ -6,9 +6,10 @@
 #include "slave_callbacks.h"
 #include "slave_server.h"
 #include "server_info.h"
+#include "client_info.h"
 #include "rpc/client.h"
 
-std::map<int, std::string> keys_map;
+std::map<int, client_info> keys_map;
 
 /**
  *
@@ -21,11 +22,13 @@ std::map<int, std::string> keys_map;
  * Size is 32 bytes, so unpacking into a unsigned char array ourselves is easy.
  */
 void set_client_public_key(int client_id, std::string const& client_ip, std::string const& publickey) {
-	keys_map[client_id] = publickey;
+	client_info info(client_id, client_ip, publickey);
+    keys_map.emplace(client_id, info);
 }
 
 void set_and_propagate_client_public_key(int client_id, std::string const& client_ip, std::string const& publickey) {
-	keys_map[client_id] = publickey;
+	client_info info(client_id, client_ip, publickey);
+    keys_map.emplace(client_id, info);
 
 	for (server_info info : slaves) {
 		if (!info.get_server_name().compare(slave_name)) {
@@ -42,8 +45,9 @@ void set_and_propagate_client_public_key(int client_id, std::string const& clien
 std::string get_public_key(std::string client_id) {
 	std::string result;
 	if (keys_map.count(stoi(client_id)) > 0) {
-		return keys_map[stoi(client_id)];
-	}
+	    client_info info = keys_map.find(stoi(client_id))->second;
+        return info.get_public_key();
+    }
 
 	return "";
 }
