@@ -12,7 +12,7 @@
 int main() {
 	int master_port = 30000;
 	rpc::client client("127.0.0.1", master_port);
-	auto result = client.call("set_client_key", 1, "public_key1");
+	auto result = client.call("set_client_key", 1, "127.0.0.1:8080", "public_key1");
 }
 
 
