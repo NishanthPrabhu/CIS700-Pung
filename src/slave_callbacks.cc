@@ -20,7 +20,11 @@ std::map<int, std::string> keys_map;
  * to a string before sending. easier than dealing with msgpack directly.
  * Size is 32 bytes, so unpacking into a unsigned char array ourselves is easy.
  */
-void set_and_propagate_client_public_key(int client_id, std::string publickey) {
+void set_client_public_key(int client_id, std::string const& client_ip, std::string const& publickey) {
+	keys_map[client_id] = publickey;
+}
+
+void set_and_propagate_client_public_key(int client_id, std::string const& client_ip, std::string const& publickey) {
 	keys_map[client_id] = publickey;
 
 	for (server_info info : slaves) {
