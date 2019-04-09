@@ -31,7 +31,7 @@ bool set_client_public_key(int client_id, std::string const& client_ip, std::str
   	return true;
 }
 
-std::string get_client_public_key(std::string client_id) {
+std::string get_client_public_key(int client_id) {
 	int slave_index = get_slave_index();
 	std::string slave_ip = slaves[slave_index].get_server_ip();
 	int port = slaves[slave_index].get_port();

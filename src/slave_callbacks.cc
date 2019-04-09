@@ -45,10 +45,10 @@ void set_and_propagate_client_public_key(int client_id, std::string const& clien
 	}
 }
 
-std::string get_public_key(std::string client_id) {
+std::string get_public_key(int client_id) {
 	std::string result;
-	if (keys_map.count(stoi(client_id)) > 0) {
-	    client_info info = keys_map.find(stoi(client_id))->second;
+	if (keys_map.count(client_id) > 0) {
+	    client_info info = keys_map.find(client_id)->second;
         return info.get_public_key();
     }
 
