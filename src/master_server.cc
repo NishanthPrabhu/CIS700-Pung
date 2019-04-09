@@ -61,7 +61,7 @@ void start_master_server(server_info *info) {
 	srv.bind("retrieve_message", &retrieve_client_message); // Client retrieves message
 	//srv.run(); // Change this to async?
     srv.async_run(1);
-     std::cin.ignore();
+    std::cin.ignore();
 }
 
 int main(int argc, char **argv) {

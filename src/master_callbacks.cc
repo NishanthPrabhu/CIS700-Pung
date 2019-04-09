@@ -36,6 +36,7 @@ std::string get_client_public_key(int client_id) {
 	std::string slave_ip = slaves[slave_index].get_server_ip();
 	int port = slaves[slave_index].get_port();
 
+    boost::trim(slave_ip);
 	rpc::client client(slave_ip, port);
 	std::string result = client.call("get_client_key", client_id).as<std::string>();
 	return result;
