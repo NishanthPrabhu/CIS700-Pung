@@ -26,15 +26,16 @@ server_info* get_slave_server(std::string server_file, std::string server_name) 
 				boost::trim(token);
 			}
 
-			if (tokens[0].compare("master"))
+			if (tokens[0].compare("master") == 0)
 				continue;
 
-			if (tokens[0].compare(server_name)) {
+			if (tokens[0].compare(server_name) != 0) {
 				server_info client(tokens[0], tokens[1], std::stoi(tokens[2]));
 				slaves.push_back(client);
 			  	continue;
       		}
 
+            std::cout << tokens[0] << std::endl;
 			info = new server_info(tokens[0], tokens[1], std::stoi(tokens[2]));
 		}
 		filereader.close();

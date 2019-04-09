@@ -7,6 +7,7 @@
 #include "master_server.h"
 #include "server_info.h"
 #include "rpc/client.h"
+#include <boost/algorithm/string.hpp>
 
 /**
  *
@@ -23,8 +24,8 @@ bool set_client_public_key(int client_id, std::string const& client_ip, std::str
   	int slave_index = get_slave_index();
     std::string slave_ip = slaves[slave_index].get_server_ip();
   	int port = slaves[slave_index].get_port();
- 
-    std::cout << slave_ip << std::endl;
+
+    boost::trim(slave_ip);
   	rpc::client client(slave_ip, port);
   	client.call("set_and_propagate_client_key", client_id, client_ip, publickey);
   	return true;

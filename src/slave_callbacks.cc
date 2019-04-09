@@ -8,6 +8,7 @@
 #include "server_info.h"
 #include "client_info.h"
 #include "rpc/client.h"
+#include <boost/algorithm/string.hpp>
 
 std::map<int, client_info> keys_map;
 
@@ -23,6 +24,7 @@ std::map<int, client_info> keys_map;
  */
 void set_client_public_key(int client_id, std::string const& client_ip, std::string const& publickey) {
 	client_info info(client_id, client_ip, publickey);
+    std::cout << "Setting public key locally for " << client_ip << ", key: " << publickey << std::endl;
     keys_map.emplace(client_id, info);
 }
 
@@ -36,9 +38,10 @@ void set_and_propagate_client_public_key(int client_id, std::string const& clien
 		}
 
 		std::string slave_ip = info.get_server_ip();
-		int port = info.get_port();
+        boost::trim(slave_ip);
+        int port = info.get_port();
 		rpc::client client(slave_ip, port);
-		auto result = client.call("set_client_key", client_id, publickey).as<bool>();
+	    client.call("set_client_key", client_id, client_ip, publickey);
 	}
 }
 
