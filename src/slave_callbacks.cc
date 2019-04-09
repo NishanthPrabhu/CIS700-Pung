@@ -8,6 +8,7 @@
 #include "server_info.h"
 #include "client_info.h"
 #include "rpc/client.h"
+#include "rpc/rpc_error.h"
 #include <boost/algorithm/string.hpp>
 
 std::map<int, client_info> keys_map;
@@ -41,8 +42,15 @@ void set_and_propagate_client_public_key(int client_id, std::string const& clien
         boost::trim(slave_ip);
         int port = info.get_port();
 		rpc::client client(slave_ip, port);
-	    client.call("set_client_key", client_id, client_ip, publickey);
-	}
+	    
+        try {
+            const uint64_t short_timeout = 1000;
+            client.set_timeout(short_timeout);
+            client.call("set_client_key", client_id, client_ip, publickey);
+        } catch (rpc::timeout &t) {
+            std::cout << "Slave not responding..skip" << std::endl;    
+        }    
+    }
 }
 
 std::string get_public_key(int client_id) {
