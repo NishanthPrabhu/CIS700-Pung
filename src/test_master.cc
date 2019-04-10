@@ -19,6 +19,7 @@ int main() {
     
     auto result = client.call("set_client_key", 1, "127.0.0.1:8080", "public_key1");
     //std::this_thread::sleep_for(timespan);
+    result = client.call("set_client_key", 1, "127.0.0.1:8080", "public_key2");
     auto key = client.call("get_client_key", 1).as<std::string>();
     std::cout << "public key: " << key << std::endl;
 
