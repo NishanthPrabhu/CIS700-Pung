@@ -57,6 +57,7 @@ void start_slave_server(server_info *info) {
 	srv.bind("store_client_message", &store_message); // Client sends message to store
 	srv.bind("retrieve_client_message", &retrieve_message); // Client retrieves message
 	srv.run(); // Change this to async?
+    //std::cin.ignore();
 }
 
 int main(int argc, char **argv) {

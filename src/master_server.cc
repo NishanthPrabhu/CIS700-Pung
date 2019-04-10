@@ -5,6 +5,7 @@
 #include "server_info.h"
 #include "master_callbacks.h"
 #include "rpc/server.h"
+#include "rpc/client.h"
 #include "master_server.h"
 #include <boost/algorithm/string.hpp>
 
@@ -44,7 +45,8 @@ server_info* get_master_server(std::string server_file) {
 }
 
 int get_slave_index() {
-	int slave_index = load_balancer_index;
+	int slave_index;
+    slave_index = load_balancer_index;
 	auto size = slaves.size();
 	load_balancer_index = (load_balancer_index + 1) % (int)size;
     std::cout << "Choosing slave: " << slave_index << std::endl;
@@ -59,9 +61,8 @@ void start_master_server(server_info *info) {
 	srv.bind("get_client_key", &get_client_public_key); // Client receives another's public key
 	srv.bind("store_message", &store_client_message); // Client sends message to store
 	srv.bind("retrieve_message", &retrieve_client_message); // Client retrieves message
-	//srv.run(); // Change this to async?
-    srv.async_run(1);
-     std::cin.ignore();
+    srv.async_run(3);
+    std::cin.ignore();
 }
 
 int main(int argc, char **argv) {

@@ -7,6 +7,7 @@
 #include "master_server.h"
 #include "server_info.h"
 #include "rpc/client.h"
+#include "rpc/rpc_error.h"
 #include <boost/algorithm/string.hpp>
 
 /**
@@ -20,34 +21,52 @@
  * Size is 32 bytes, so unpacking into a unsigned char array ourselves is easy.
  */
 bool set_client_public_key(int client_id, std::string const& client_ip, std::string const& publickey) {
-	std::cout<<"Setting public key";
-  	int slave_index = get_slave_index();
-    std::string slave_ip = slaves[slave_index].get_server_ip();
-  	int port = slaves[slave_index].get_port();
-
-    boost::trim(slave_ip);
-  	rpc::client client(slave_ip, port);
+	std::cout<<"Setting public key"<<std::endl;
   	
-  	std::cout << "Recieved key as " << publickey << "\n";
-  	
-  	client.call("set_and_propagate_client_key", client_id, client_ip, publickey);
-  	return true;
+    while (true) {
+        int slave_index = get_slave_index();
+        std::string slave_ip = slaves[slave_index].get_server_ip();
+  	    int port = slaves[slave_index].get_port();
+        boost::trim(slave_ip);
+  	    rpc::client client(slave_ip, port);
+  	  
+        try {
+            const uint64_t short_timeout = 7000;
+            client.set_timeout(short_timeout);
+            client.call("set_and_propagate_client_key", client_id, client_ip, publickey);
+        } catch (rpc::timeout &t) {
+            std::cout << "Slave not responding..skip" << std::endl;
+            continue;
+        }
+        break;
+    }
+        
+    return true;
 }
 
-std::string get_client_public_key(std::string client_id) {
-    std::cout << "Get called for client id " << client_id << "\n";
-	int slave_index = get_slave_index();
-	std::string slave_ip = slaves[slave_index].get_server_ip();
-	int port = slaves[slave_index].get_port();
+std::string get_client_public_key(int client_id) {
+
+    std::string result = "";
+    while (true) {
+        int slave_index = get_slave_index();
+	    std::string slave_ip = slaves[slave_index].get_server_ip();
+	    int port = slaves[slave_index].get_port();
+        boost::trim(slave_ip);
+	    rpc::client client(slave_ip, port);
 	
-	std::cout << "IP is " << slave_ip << " and port is " << port << "\n";
-    
-    boost::trim(slave_ip);
-	rpc::client client(slave_ip, port);
-	std::cout << "Calling client\n";
-	std::string result = client.call("get_client_key", client_id).as<std::string>();
-	std::cout << "Result recieved...returning it\n";
-	return result;
+        try {
+            const uint64_t short_timeout = 2000;
+            client.set_timeout(short_timeout);
+            std::cout << "Calling client\n";
+            result = client.call("get_client_key", client_id).as<std::string>();
+        } catch (rpc::timeout &t) {
+            std::cout << "Slave not responding..skip" << std::endl;
+            continue;
+        }
+        break;
+    }
+    std::cout << "Result recieved...returning it\n";
+    return result;
 }
 
 bool store_client_message(std::string label, std::string message) {
@@ -64,4 +83,3 @@ bool store_client_message(std::string label, std::string message) {
 std::string retrieve_client_message() {
   	return "";
 }
-
