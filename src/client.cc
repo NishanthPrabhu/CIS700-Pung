@@ -94,7 +94,7 @@ void initialize_client(msg_client &client, int id, string master_ip, int master_
 
 void create_comm_keys(msg_client &client, msg_peer &peer, int peer_id)
 {
-	auto key = client.client->call("get_client_key", to_string(peer_id)).as<std::string>();
+	auto key = client.client->call("get_client_key", peer_id).as<std::string>();
 	
 	cout << "Peer public key is " << key << "\n";
 	
