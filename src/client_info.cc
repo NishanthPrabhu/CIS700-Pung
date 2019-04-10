@@ -4,6 +4,9 @@
 
 #include "client_info.h"
 
+
+client_info::client_info(){};
+
 client_info::client_info(int client_id, std::string const& client_ip, std::string const& publickey) {
 	this->client_id = client_id;
 	this->client_ip = client_ip;

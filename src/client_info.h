@@ -15,6 +15,7 @@ class client_info {
 	int client_id;
 
 public:
+	client_info();
     client_info(int client_id, std::string const& client_ip, std::string const& publickey);
 	int get_client_id();
 	std::string get_client_ip();

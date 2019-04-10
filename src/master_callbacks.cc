@@ -27,17 +27,26 @@ bool set_client_public_key(int client_id, std::string const& client_ip, std::str
 
     boost::trim(slave_ip);
   	rpc::client client(slave_ip, port);
+  	
+  	std::cout << "Recieved key as " << publickey << "\n";
+  	
   	client.call("set_and_propagate_client_key", client_id, client_ip, publickey);
   	return true;
 }
 
 std::string get_client_public_key(std::string client_id) {
+    std::cout << "Get called for client id " << client_id << "\n";
 	int slave_index = get_slave_index();
 	std::string slave_ip = slaves[slave_index].get_server_ip();
 	int port = slaves[slave_index].get_port();
-
+	
+	std::cout << "IP is " << slave_ip << " and port is " << port << "\n";
+    
+    boost::trim(slave_ip);
 	rpc::client client(slave_ip, port);
+	std::cout << "Calling client\n";
 	std::string result = client.call("get_client_key", client_id).as<std::string>();
+	std::cout << "Result recieved...returning it\n";
 	return result;
 }
 
