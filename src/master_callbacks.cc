@@ -10,6 +10,8 @@
 #include "rpc/rpc_error.h"
 #include <boost/algorithm/string.hpp>
 
+std::map<int, std::string> client_address_map;
+
 /**
  *
  * @param client_id
@@ -22,7 +24,8 @@
  */
 bool set_client_public_key(int client_id, std::string const& client_ip, std::string const& publickey) {
 	std::cout<<"Setting public key"<<std::endl;
-  	
+    client_address_map[client_id] = client_ip;
+
     while (true) {
         int slave_index = get_slave_index();
         std::string slave_ip = slaves[slave_index].get_server_ip();
