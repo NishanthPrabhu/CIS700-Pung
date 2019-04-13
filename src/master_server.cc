@@ -57,6 +57,7 @@ void send_rounds_notice_clients(int round_number) {
         std::vector<std::string> ip_port;
         boost::split(ip_port, client_ip_port, boost::is_any_of(":"));
         rpc::client rpcclient(ip_port[0], stoi(ip_port[1]));
+        boost::trim(ip_port);
 
         try {
             const uint64_t short_timeout = 1000;
@@ -77,6 +78,7 @@ void send_rounds_notice_slaves(int round_number) {
         server_info slave = slaves[i];
         std::string slave_ip = slave.get_server_ip();
         int port = slave.get_port();
+        boost::trim(slave_ip);
         rpc::client client(slave_ip, port);
 
         try {
@@ -104,9 +106,6 @@ void round_master(int round_length) {
 
         std::this_thread::sleep_for(std::chrono::milliseconds(round_length));
     }    
-
-
-
 }    
 
 int get_slave_index() {
@@ -132,7 +131,7 @@ void start_master_server(server_info *info) {
 
 int main(int argc, char **argv) {
 	if (argc < 3) {
-		std::cerr << "Usage: master_server [server_list_file] [length of round(in milliseconds)]";
+		std::cerr << "Usage: master_server [server_list_file] [length of round(in milliseconds)]" << std::endl;
 		exit(1);
 	}
 
@@ -140,6 +139,6 @@ int main(int argc, char **argv) {
 	std::string server_file = argv[1];
     int round_length = std::stoi(argv[2]);
 	server_info* info = get_master_server(server_file);
-    //std::thread thread(&round_master, std::ref(round_length));
+    std::thread thread(&round_master, std::ref(round_length));
     start_master_server(info);
 }

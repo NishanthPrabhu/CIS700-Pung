@@ -56,13 +56,14 @@ void start_slave_server(server_info *info) {
 	srv.bind("get_client_key", &get_public_key); // Client receives another's public key
 	srv.bind("store_client_message", &store_message); // Client sends message to store
 	srv.bind("retrieve_client_message", &retrieve_message); // Client retrieves message
-	srv.run(); // Change this to async?
+	srv.bind("rounds_notice", &initialize_new_round);
+    srv.run(); // Change this to async?
     //std::cin.ignore();
 }
 
 int main(int argc, char **argv) {
 	if (argc < 3) {
-		std::cerr << "Usage: master_server [server_list_file] [slave{slave id}]";
+		std::cerr << "Usage: master_server [server_list_file] [slave{slave id}]" << std::endl;
 		exit(1);
 	}
 

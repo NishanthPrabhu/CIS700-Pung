@@ -12,6 +12,7 @@
 #include <boost/algorithm/string.hpp>
 
 std::map<int, client_info> keys_map;
+std::string current_round;
 
 /**
  *
@@ -64,6 +65,13 @@ std::string get_public_key(int client_id) {
 
 	return "";
 }
+
+void initialize_new_round(std::string round_id) {
+    std::cout << "New round alert" << std::endl;
+    current_round = round_id;
+    // TODO clear messages and their labels from the in-memory store
+}
+
 
 bool store_message(std::string label, std::string message) {
 	bool result;
