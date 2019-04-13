@@ -50,14 +50,19 @@ server_info* get_master_server(std::string server_file) {
 
 void send_rounds_notice_clients(int round_number) {
     std::string round_id = "round_" + std::to_string(round_number);
-    
+    std::cout << "Here" << std::endl;
+
     for (auto const& client : client_address_map) {
+        std::cout << "There" << std::endl;
         int client_id = client.first;
         std::string client_ip_port = client.second;
         std::vector<std::string> ip_port;
         boost::split(ip_port, client_ip_port, boost::is_any_of(":"));
-        rpc::client rpcclient(ip_port[0], stoi(ip_port[1]));
-        boost::trim(ip_port);
+        std::string ip = ip_port[0];
+        boost::trim(ip);
+        
+        rpc::client rpcclient(ip, stoi(ip_port[1]));
+
 
         try {
             const uint64_t short_timeout = 1000;

@@ -3,6 +3,11 @@
 //
 
 #include "client.h"
+#include "rpc/server.h"
+
+#define RECEIVE_PORT 40000
+
+std::string current_round_id;
 
 static void init(void)
 {
@@ -69,6 +74,11 @@ void register_client(rpc::client *client, int id, string ip, unsigned char* publ
 	client->call("set_client_key", id, ip, get_hex(public_key, crypto_kx_PUBLICKEYBYTES));
 }
 
+void initialize_new_round(std::string round_id) {
+    cout << "New round: " << round_id << std::endl;
+    current_round_id = round_id;
+}    
+
 void initialize_client(msg_client &client, int id, string master_ip, int master_port) {
 	
 	unsigned char public_key[crypto_kx_PUBLICKEYBYTES];
@@ -84,12 +94,15 @@ void initialize_client(msg_client &client, int id, string master_ip, int master_
     cout << get_hex(private_key, sizeof private_key) << "\n";
     
     rpc::client *rpc_client = new rpc::client(master_ip, master_port);
-    
-    string ip = getIPAddress();
-    
+    string ip = getIPAddress() + ":" + std::to_string(RECEIVE_PORT);
+    std::cout << ip << std::endl;
     register_client(rpc_client, id, ip, public_key); 
-    
     client.init_msg_client(id, ip, rpc_client, master_ip, master_port, public_key, private_key);
+
+    // Setting up rpc server with async callbacks to process rounds information from server
+    rpc::server *srv = new rpc::server(RECEIVE_PORT);
+    srv->bind("rounds_notice", &initialize_new_round);
+    srv->async_run(2);
 }
 
 void create_comm_keys(msg_client &client, msg_peer &peer, int peer_id)
@@ -151,7 +164,7 @@ int main(int argc, char **argv) {
 	int peer_id;
 	
 	initialize_client(client, atoi(argv[1]), string(argv[2]), atoi(argv[3]));
-	
+
 	cout << "Enter peer client id\n";
 	
 	cin >> peer_id;
