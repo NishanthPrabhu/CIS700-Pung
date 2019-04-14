@@ -54,9 +54,11 @@ void start_slave_server(server_info *info) {
     srv.bind("set_client_key", &set_client_public_key);
 	srv.bind("set_and_propagate_client_key", &set_and_propagate_client_public_key); // Client sends it's public key
 	srv.bind("get_client_key", &get_public_key); // Client receives another's public key
-	srv.bind("store_client_message", &store_message); // Client sends message to store
-	srv.bind("retrieve_client_message", &retrieve_message); // Client retrieves message
+	srv.bind("store_and_propagate_message", &store_and_propagate_message); // Client sends message to store
+	srv.bind("store_message", &store_message);
+    srv.bind("retrieve_client_message", &retrieve_message); // Client retrieves message
 	srv.bind("rounds_notice", &initialize_new_round);
+    srv.bind("index_vote", &send_index_vote);
     srv.run(); // Change this to async?
     //std::cin.ignore();
 }

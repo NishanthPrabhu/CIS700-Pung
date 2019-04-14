@@ -77,8 +77,9 @@ bool store_client_message(std::string label, std::string message) {
 	std::string slave_ip = slaves[slave_index].get_server_ip();
 	int port = slaves[slave_index].get_port();
 
+    int index = get_label_index();
 	rpc::client client(slave_ip, port);
-	auto result = client.call("store_client_message", label, message).as<bool>();
+	auto result = client.call("store_and_propagate_message", index, label, message).as<bool>();
   	return result;
 }
 

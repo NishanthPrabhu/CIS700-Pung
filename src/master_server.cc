@@ -5,6 +5,7 @@
 #include <thread>
 #include <vector>
 #include <map>
+#include <limits>
 #include "server_info.h"
 #include "master_callbacks.h"
 #include "rpc/server.h"
@@ -50,7 +51,6 @@ server_info* get_master_server(std::string server_file) {
 
 void send_rounds_notice_clients(int round_number) {
     std::string round_id = "round_" + std::to_string(round_number);
-    std::cout << "Here" << std::endl;
 
     for (auto const& client : client_address_map) {
         std::cout << "There" << std::endl;
@@ -75,6 +75,32 @@ void send_rounds_notice_clients(int round_number) {
     }    
 }    
 
+// Decide index to store label+message at with a simple consensus algorithm
+int get_label_index() {
+    int max_index_elected = std::numeric_limits<int>::min();
+    int vote;
+
+    for (int i = 0; i < slaves.size(); i++) {
+        server_info slave = slaves[i];
+        std::string slave_ip = slave.get_server_ip();
+        int port = slave.get_port();
+        boost::trim(slave_ip);
+        rpc::client client(slave_ip, port);
+
+        try {
+            const uint64_t short_timeout = 1000;
+            client.set_timeout(short_timeout);
+            vote = client.call("index_vote").as<int>();
+            max_index_elected = std::max(max_index_elected, vote);
+        } catch (rpc::timeout &t) {
+            std::cout << "Slave not responding..skip" << std::endl;
+            continue;
+        }
+    }    
+
+    std::cout << "Elected index: "  << max_index_elected << std::endl;
+    return max_index_elected;
+}    
 
 void send_rounds_notice_slaves(int round_number) {
     std::string round_id = "round_" + std::to_string(round_number);

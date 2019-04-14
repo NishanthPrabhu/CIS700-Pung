@@ -3,6 +3,7 @@
 //
 
 #include <iostream>
+#include <tuple>
 #include "slave_callbacks.h"
 #include "slave_server.h"
 #include "server_info.h"
@@ -13,6 +14,7 @@
 
 std::map<int, client_info> keys_map;
 std::string current_round;
+std::vector<std::tuple<std::string, std::string>> message_store; 
 
 /**
  *
@@ -66,17 +68,49 @@ std::string get_public_key(int client_id) {
 	return "";
 }
 
+int send_index_vote() {
+    int current_index = message_store.size() - 1;
+    return current_index + 1;
+}    
+
 void initialize_new_round(std::string round_id) {
     std::cout << "New round alert" << std::endl;
     current_round = round_id;
-    // TODO clear messages and their labels from the in-memory store
+    message_store.clear();
 }
 
+void store_message(int index, std::string label, std::string message) {
+    if (message_store.size() <= index) {
+        message_store.resize(index+1);
+    }
+    message_store.at(index) = std::make_tuple(label, message);
+}
 
-bool store_message(std::string label, std::string message) {
+void store_and_propagate_message(int index, std::string label, std::string message) {
 	bool result;
-	// TODO store messages in map or vector (if vector, how to find label/index?)
-	return result;
+    if (message_store.size() <= index) {
+        message_store.resize(index+1);
+    }
+    message_store.at(index) = std::make_tuple(label, message);
+
+	for (server_info info : slaves) {
+		if (!info.get_server_name().compare(slave_name)) {
+			continue;
+		}
+
+		std::string slave_ip = info.get_server_ip();
+        boost::trim(slave_ip);
+        int port = info.get_port();
+		rpc::client client(slave_ip, port);
+	    
+        try {
+            const uint64_t short_timeout = 1000;
+            client.set_timeout(short_timeout);
+            client.call("store_message", index, label, message);
+        } catch (rpc::timeout &t) {
+            std::cout << "Slave not responding..skip" << std::endl;    
+        }    
+    }
 }
 
 // This needs PIR, how to integrate?
