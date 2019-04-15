@@ -8,6 +8,8 @@
 #include <vector>
 #include <string>
 #include "rpc/client.h"
+#include "master_callbacks.h"
+#include "bloom_filter.hpp"
 #include <boost/algorithm/string.hpp>
 using namespace::std;
 
@@ -31,7 +33,12 @@ int main() {
     unsigned char received_key[32];
     strcpy((char *)received_key, rcvkeystring.c_str());
     std::cout << "public key received: " << received_key << std::endl;
+
+    client.call("store_message", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb");
+    mapping label_mapping = client.call("get_label_mapping").as<mapping>();
+    for (int i=0; i <label_mapping.label_map.size(); i++) {
+        auto labelmap = label_mapping.label_map[i];
+        std::cout << std::get<0>(labelmap) << std::endl;
+        std::cout << std::get<1>(labelmap) << std::endl;
+    }
 }
-
-
-

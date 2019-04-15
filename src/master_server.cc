@@ -156,6 +156,7 @@ void start_master_server(server_info *info) {
 	srv.bind("get_client_key", &get_client_public_key); // Client receives another's public key
 	srv.bind("store_message", &store_client_message); // Client sends message to store
 	srv.bind("retrieve_message", &retrieve_client_message); // Client retrieves message
+    srv.bind("get_label_mapping", &get_label_mapping);
     srv.async_run(3);
     std::cin.ignore();
 }

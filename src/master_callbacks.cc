@@ -8,9 +8,12 @@
 #include "server_info.h"
 #include "rpc/client.h"
 #include "rpc/rpc_error.h"
+#include "bloom_filter.hpp"
 #include <boost/algorithm/string.hpp>
 
 std::map<int, std::string> client_address_map;
+
+mapping label_mapping; 
 
 /**
  *
@@ -72,15 +75,45 @@ std::string get_client_public_key(int client_id) {
     return result;
 }
 
-bool store_client_message(std::string label, std::string message) {
+mapping get_label_mapping() {
+    return label_mapping;
+}    
+
+/*
+bloom_filter get_label_mapping() {
+    std::cout << "Staring bloom filter generation.." << std::endl;
+    bloom_parameters parameters;
+    parameters.projected_element_count = 100;
+    //parameters.false_positive_probability = 0.000;
+    if (!parameters) {
+        std::cout << "Error - Invalid set of bloom filter parameters!" << std::endl;
+        assert (false);
+    }
+
+    parameters.compute_optimal_parameters();
+    bloom_filter filter(parameters);
+   
+    std::cout << "Generating bloom filter.." << std::endl;
+    for (int i = 0; i < label_mapping.size(); i++) {
+        auto entry = label_mapping[i];
+        std::cout << "Adding to bf: " << std::get<0>(entry) << " now" << std::endl;
+        filter.insert(std::get<0>(entry));
+    }    
+    return filter;
+}*/
+
+
+void store_client_message(std::string label, std::string message) {
   	int slave_index = get_slave_index();
 	std::string slave_ip = slaves[slave_index].get_server_ip();
-	int port = slaves[slave_index].get_port();
+    boost::trim(slave_ip);
+    int port = slaves[slave_index].get_port();
 
     int index = get_label_index();
-	rpc::client client(slave_ip, port);
-	auto result = client.call("store_and_propagate_message", index, label, message).as<bool>();
-  	return result;
+    label_mapping.label_map.push_back(std::make_tuple(label, index));	
+    std::cout << "Storing label: " << label << " at index: " << index << std::endl;
+    rpc::client client(slave_ip, port);
+	client.call("store_and_propagate_message", index, label, message);
 }
 
 // This needs PIR, how to integrate?
