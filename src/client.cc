@@ -73,7 +73,7 @@ void register_client(rpc::client *client, int id, string ip, unsigned char* publ
 void initialize_new_round(std::string round_id) {
 
     round.set_round_id(round_id);
-    cout << "New round: " << round.get_round_id() << std::endl;
+    //cout << "New round: " << round.get_round_id() << std::endl;
     
     if(peer_joined)
     	create_round_labels();
@@ -88,15 +88,17 @@ void create_round_labels()
 	
 	crypto_auth_hmacsha512(hash, (const unsigned char *)s_str.c_str(), s_str.length(), peer.get_key_l());
 	round.set_label_s(get_hex(hash, sizeof hash));
-	cout << "label_s : " << round.get_label_s() << "\n";
+	//cout << "label_s : " << round.get_label_s() << "\n";
 	
 	crypto_auth_hmacsha512(hash, (const unsigned char *)r_str.c_str(), r_str.length(), peer.get_key_l());
 	round.set_label_r(get_hex(hash, sizeof hash));
-	cout << "label_r : " << round.get_label_r() << "\n";;
+	//cout << "label_r : " << round.get_label_r() << "\n";;
 	
 }
 
-void initialize_client(int id, string master_ip, int master_port) {
+void initialize_client(int id, string master_ip, int master_port)
+{
+	cout << "\n--------------------\nInitializing Client\n--------------------\n";
 	
 	unsigned char public_key[crypto_kx_PUBLICKEYBYTES];
     unsigned char private_key[crypto_kx_SECRETKEYBYTES];
@@ -121,11 +123,19 @@ void initialize_client(int id, string master_ip, int master_port) {
     rpc::server *srv = new rpc::server(RECEIVE_PORT+id);
     srv->bind("rounds_notice", &initialize_new_round);
     srv->async_run(2);
+    
+    cout << "____________________________________________\n";
 }
 
-void create_comm_keys(int peer_id)
+bool create_comm_keys(int peer_id)
 {
 	auto key = client.client->call("get_client_key", peer_id).as<std::string>();
+	
+	if(key.empty())
+	{
+		cout << "Peer not joined yet. Ask them to join the server or try again later\n";
+		return false;
+	}
 	
 	cout << "Peer public key is " << key << "\n";
 	
@@ -134,7 +144,7 @@ void create_comm_keys(int peer_id)
 	if (sodium_hex2bin(peer_public, crypto_kx_PUBLICKEYBYTES, key.c_str(), key.length(), NULL, NULL, NULL) == -1)
 	{
 		cout << "Aborting. Peer public key corrupt\n";
-        abort();
+        return false;
     }	
     
     unsigned char rx[crypto_kx_SESSIONKEYBYTES], tx[crypto_kx_SESSIONKEYBYTES];
@@ -151,13 +161,13 @@ void create_comm_keys(int peer_id)
     else
     {
     	cout << "Both client ids cannot be same. Exiting try again\n";
-    	abort();
+    	return false;
     }
     
     if(key_res != 0)
     {
     	cout << "Peer's public key suspicious. Exiting\n";
-    	abort();
+    	return false;
     }
 	
 	peer.set_peer_info(client_info(peer_id, "", key));
@@ -167,15 +177,19 @@ void create_comm_keys(int peer_id)
     cout << "Key_l key: " << get_hex(peer.get_key_e(), crypto_kx_SESSIONKEYBYTES) << "\n";
     
     peer_joined = true;
+    
+    return true;
 	
 }
 
 void display_help()
 {
+	cout << "--------------------\nPossible list of commands\n--------------------\n";
 	cout << "/join : to enter conversation with a particular client\n";
 	cout << "/end  : to end chat with current peer\n";
 	cout << "/quit : to quit the client\n";
-	cout << "/help : to display this help section again\n"; 
+	cout << "/help : to display this help section again\n";
+	cout << "____________________________________________\n";
 }
 
 command get_command()
@@ -222,10 +236,8 @@ int main(int argc, char **argv) {
 	bool run = true;
 	command command_id;
 	
-	cout << "\n********************\nINITIALIZING CLIENT\n********************\n";
 	initialize_client(atoi(argv[1]), string(argv[2]), atoi(argv[3]));
-	cout << "\n********************\nDONE\n********************\n\n";
-	cout << "Possible list of commands\n";
+	
 	display_help();
 	
 	while(run)
@@ -236,17 +248,22 @@ int main(int argc, char **argv) {
 		{
 			case JOIN_PEER: 	cout << "Enter peer client id\n";
 								cin >> peer_id;
-								create_comm_keys(peer_id);
-								cout << "Communication started with peer \n" << peer_id;
-								cout << "Type /help anytime to quit and check other command options\n";
+								cin.get();
+								if(create_comm_keys(peer_id))
+								{
+									cout << "Communication started with peer \n" << peer_id;
+									cout << "Type /help anytime to check other command options\n";
+								}
 								break;
 								
-			case MSG:			add_to_msgqueue();
+			case MSG:			cout << "Adding to msg queue\n";
+								add_to_msgqueue();
 								break;
 								
 			case QUIT_CHAT: 	break;
 			
-			case QUIT_CLIENT: 	destroy_keys_and_data();
+			case QUIT_CLIENT: 	cout << "Destroying all private information\n";
+								destroy_keys_and_data();
 							  	run = false;
 							  	break;
 							  	
