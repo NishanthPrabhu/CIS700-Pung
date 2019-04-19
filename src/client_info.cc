@@ -17,10 +17,10 @@ int client_info::get_client_id() {
 	return client_id;
 }
 
-std::string client_info::get_client_ip() {
+string client_info::get_client_ip() {
 	return client_ip;
 }
 
-std::string client_info::get_public_key() {
+string client_info::get_public_key() {
 	return publickey;
 }

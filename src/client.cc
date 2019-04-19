@@ -5,10 +5,6 @@
 #include "client.h"
 #include "rpc/server.h"
 
-#define RECEIVE_PORT 40000
-
-std::string current_round_id;
-
 static void init(void)
 {
     if (sodium_init() != 0)
@@ -75,11 +71,32 @@ void register_client(rpc::client *client, int id, string ip, unsigned char* publ
 }
 
 void initialize_new_round(std::string round_id) {
-    cout << "New round: " << round_id << std::endl;
-    current_round_id = round_id;
-}    
 
-void initialize_client(msg_client &client, int id, string master_ip, int master_port) {
+    round.set_round_id(round_id);
+    cout << "New round: " << round.get_round_id() << std::endl;
+    
+    if(peer_joined)
+    	create_round_labels();
+}
+
+void create_round_labels()
+{
+	string s_str = round.get_round_id()+"||"+to_string(peer.get_peer_id());
+	string r_str = round.get_round_id()+"||"+to_string(client.get_id());
+	
+	unsigned char hash[crypto_auth_hmacsha512_BYTES];
+	
+	crypto_auth_hmacsha512(hash, (const unsigned char *)s_str.c_str(), s_str.length(), peer.get_key_l());
+	round.set_label_s(get_hex(hash, sizeof hash));
+	cout << "label_s : " << round.get_label_s() << "\n";
+	
+	crypto_auth_hmacsha512(hash, (const unsigned char *)r_str.c_str(), r_str.length(), peer.get_key_l());
+	round.set_label_r(get_hex(hash, sizeof hash));
+	cout << "label_r : " << round.get_label_r() << "\n";;
+	
+}
+
+void initialize_client(int id, string master_ip, int master_port) {
 	
 	unsigned char public_key[crypto_kx_PUBLICKEYBYTES];
     unsigned char private_key[crypto_kx_SECRETKEYBYTES];
@@ -94,18 +111,19 @@ void initialize_client(msg_client &client, int id, string master_ip, int master_
     cout << get_hex(private_key, sizeof private_key) << "\n";
     
     rpc::client *rpc_client = new rpc::client(master_ip, master_port);
-    string ip = getIPAddress() + ":" + std::to_string(RECEIVE_PORT);
+    string ip = getIPAddress() + ":" + std::to_string(RECEIVE_PORT+id);
     std::cout << ip << std::endl;
+    
     register_client(rpc_client, id, ip, public_key); 
     client.init_msg_client(id, ip, rpc_client, master_ip, master_port, public_key, private_key);
 
     // Setting up rpc server with async callbacks to process rounds information from server
-    rpc::server *srv = new rpc::server(RECEIVE_PORT);
+    rpc::server *srv = new rpc::server(RECEIVE_PORT+id);
     srv->bind("rounds_notice", &initialize_new_round);
     srv->async_run(2);
 }
 
-void create_comm_keys(msg_client &client, msg_peer &peer, int peer_id)
+void create_comm_keys(int peer_id)
 {
 	auto key = client.client->call("get_client_key", peer_id).as<std::string>();
 	
@@ -127,7 +145,7 @@ void create_comm_keys(msg_client &client, msg_peer &peer, int peer_id)
     											client.get_public_key(), client.get_private_key(),
     											peer_public);
     else if(client.get_id() > peer_id)
-    	key_res = crypto_kx_client_session_keys(rx, tx, 
+    	key_res = crypto_kx_client_session_keys(tx, rx, 
     											client.get_public_key(), client.get_private_key(),
     											peer_public);
     else
@@ -145,9 +163,49 @@ void create_comm_keys(msg_client &client, msg_peer &peer, int peer_id)
 	peer.set_peer_info(client_info(peer_id, "", key));
 	peer.set_comm_keys(rx, tx);
 	
-	cout << "Recieving Key: " << get_hex(peer.get_recieving_key(), crypto_kx_SESSIONKEYBYTES) << "\n";
-    cout << "Sending key: " << get_hex(peer.get_transmission_key(), crypto_kx_SESSIONKEYBYTES) << "\n";
+	cout << "Key_e : " << get_hex(peer.get_key_l(), crypto_kx_SESSIONKEYBYTES) << "\n";
+    cout << "Key_l key: " << get_hex(peer.get_key_e(), crypto_kx_SESSIONKEYBYTES) << "\n";
+    
+    peer_joined = true;
 	
+}
+
+void display_help()
+{
+	cout << "/join : to enter conversation with a particular client\n";
+	cout << "/end  : to end chat with current peer\n";
+	cout << "/quit : to quit the client\n";
+	cout << "/help : to display this help section again\n"; 
+}
+
+command get_command()
+{
+	string input;
+	getline(cin, input);
+	
+	if(!input.compare("/join"))
+		return JOIN_PEER;
+	else if(!input.compare("/end"))
+		return QUIT_CHAT;
+	else if(!input.compare("/quit"))
+		return QUIT_CLIENT;
+	else if(!input.compare("/help"))
+		return HELP;
+	else
+	{
+		message = input;
+		return MSG;
+	}
+}
+
+void add_to_msgqueue()
+{
+	msgs.push(message);
+	message = "";
+}
+
+void destroy_keys_and_data()
+{
 }
 
 int main(int argc, char **argv) {
@@ -159,18 +217,45 @@ int main(int argc, char **argv) {
 	
 	init();
 			
-	msg_client client;
-	msg_peer peer;
 	int peer_id;
 	
-	initialize_client(client, atoi(argv[1]), string(argv[2]), atoi(argv[3]));
+	bool run = true;
+	command command_id;
+	
+	cout << "\n********************\nINITIALIZING CLIENT\n********************\n";
+	initialize_client(atoi(argv[1]), string(argv[2]), atoi(argv[3]));
+	cout << "\n********************\nDONE\n********************\n\n";
+	cout << "Possible list of commands\n";
+	display_help();
+	
+	while(run)
+	{
+		command_id = get_command();
+		
+		switch(command_id)
+		{
+			case JOIN_PEER: 	cout << "Enter peer client id\n";
+								cin >> peer_id;
+								create_comm_keys(peer_id);
+								cout << "Communication started with peer \n" << peer_id;
+								cout << "Type /help anytime to quit and check other command options\n";
+								break;
+								
+			case MSG:			add_to_msgqueue();
+								break;
+								
+			case QUIT_CHAT: 	break;
+			
+			case QUIT_CLIENT: 	destroy_keys_and_data();
+							  	run = false;
+							  	break;
+							  	
+			case HELP:			display_help();
+								break;
+		}
+		
+	}
 
-	cout << "Enter peer client id\n";
-	
-	cin >> peer_id;
-	
-	create_comm_keys(client, peer, peer_id);	
-	
 	//TODO - client communication with rounds 
 	
 	return 0;

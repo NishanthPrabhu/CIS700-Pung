@@ -2,11 +2,11 @@
 // Created by Nishanth Prabhu on 27/03/19.
 //
 
-#include <string>
-
 #ifndef CIS700_PUNG_CLIENT_INFO_H
 #define CIS700_PUNG_CLIENT_INFO_H
 
+#include <string>
+using namespace std;
 
 class client_info {
 

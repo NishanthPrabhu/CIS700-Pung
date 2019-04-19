@@ -41,14 +41,32 @@ public:
 class msg_peer {
 
     client_info peer;
-    unsigned char recieve_key[crypto_kx_SESSIONKEYBYTES];
-    unsigned char transmit_key[crypto_kx_SESSIONKEYBYTES];
+    unsigned char key_l[crypto_kx_SESSIONKEYBYTES];
+    unsigned char key_e[crypto_kx_SESSIONKEYBYTES];
     
 public:
     void set_peer_info(client_info);
     void set_comm_keys(const unsigned char*, const unsigned char*);
-    unsigned char* get_recieving_key();
-    unsigned char* get_transmission_key();
+    unsigned char* get_key_l();
+    unsigned char* get_key_e();
+    int get_peer_id();
+};
+
+class round_info {
+	
+	string round_id;
+	string label_s;
+	string label_r;
+	
+public:
+	void set_round_id(string id);
+	string get_round_id();
+	
+	void set_label_s(string label);
+	string get_label_s();
+	
+	void set_label_r(string label);
+	string get_label_r();
 };
 
 

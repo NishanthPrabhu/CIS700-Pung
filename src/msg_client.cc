@@ -52,14 +52,49 @@ void msg_peer::set_peer_info(client_info info) {
 void msg_peer::set_comm_keys(const unsigned char* recieve_key,
                               const unsigned char* transmit_key) {
 
-    memcpy(this->recieve_key, recieve_key, crypto_kx_SESSIONKEYBYTES);
-	memcpy(this->transmit_key, transmit_key, crypto_kx_SESSIONKEYBYTES);
+    memcpy(this->key_l, recieve_key, crypto_kx_SESSIONKEYBYTES);
+	memcpy(this->key_e, transmit_key, crypto_kx_SESSIONKEYBYTES);
 }
 
-unsigned char* msg_peer::get_recieving_key() {
-    return recieve_key;
+unsigned char* msg_peer::get_key_l() {
+    return key_l;
 }
-unsigned char* msg_peer::get_transmission_key() {
-    return transmit_key;
+unsigned char* msg_peer::get_key_e() {
+    return key_e;
 }
 
+int msg_peer::get_peer_id()
+{
+	return peer.get_client_id();
+}
+
+
+void round_info::set_round_id(string id)
+{
+	round_id = id;
+}
+
+string round_info::get_round_id()
+{
+	return round_id;
+}
+
+void round_info::set_label_s(string label)
+{
+	label_s = label;
+}
+
+string round_info::get_label_s()
+{
+	return label_s;
+}
+
+void round_info::set_label_r(string label)
+{
+	label_r = label;
+}
+
+string round_info::get_label_r()
+{
+	return label_r;
+}

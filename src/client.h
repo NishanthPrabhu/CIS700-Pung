@@ -6,6 +6,7 @@
 #include <iostream>
 #include <cstring>
 #include <string>
+#include <queue>
 
 #include <iostream>
 #include <cstdlib>
@@ -15,6 +16,24 @@
 
 using namespace::std;
 
+#define RECEIVE_PORT 40000
+
+enum command
+{
+	JOIN_PEER,
+	MSG,
+	QUIT_CHAT,
+	QUIT_CLIENT,
+	HELP
+};
+
+msg_client client;
+msg_peer peer;
+string message;
+queue<string> msgs;
+round_info round;
+bool peer_joined = false;
+
 static void init();
 
 string get_hex(const unsigned char *, const size_t);
@@ -23,9 +42,21 @@ string getIPAddress();
 
 void register_client(rpc::client *, int, string, unsigned char*);
 
-void initialize_client(msg_client &, int, string, int);
+void initialize_new_round(std::string round_id);
 
-void create_comm_keys(msg_client &client, msg_peer &peer, int peer_id);
+void create_round_labels();
+
+void initialize_client(int, string, int);
+
+void create_comm_keys(string peer_id);
+
+void display_help();
+
+command get_command();
+
+void add_to_msgqueue();
+
+void destroy_keys_and_data();
 
 
 #endif
