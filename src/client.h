@@ -16,7 +16,10 @@
 
 using namespace::std;
 
+#define MESSAGE_LEN 256
+#define CIPHERTEXT_LEN (crypto_secretbox_MACBYTES + MESSAGE_LEN)
 #define RECEIVE_PORT 40000
+#define NONCE ((const unsigned char *) "AiiNcWTaX3YakIYL5C7tpYbl")
 
 enum command
 {
@@ -31,7 +34,7 @@ msg_client client;
 msg_peer peer;
 string message;
 queue<string> msgs;
-round_info round;
+round_info cur_round;
 bool peer_joined = false;
 
 static void init();
@@ -41,6 +44,10 @@ string get_hex(const unsigned char *, const size_t);
 string getIPAddress();
 
 void register_client(rpc::client *, int, string, unsigned char*);
+
+void send_message();
+
+void retrieve_msg();
 
 void initialize_new_round(std::string round_id);
 

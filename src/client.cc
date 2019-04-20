@@ -5,7 +5,7 @@
 #include "client.h"
 #include "rpc/server.h"
 
-#define MESSAGE_LEN 256
+#include "master_callbacks.h"
 
 static void init(void)
 {
@@ -74,6 +74,7 @@ void register_client(rpc::client *client, int id, string ip, unsigned char* publ
 
 void send_message()
 {
+	//TODO send dummy message
 	if(!msgs.empty())
 	{
 		string message = msgs.front();
@@ -93,63 +94,108 @@ void send_message()
 		message = to_string(cur_length)+"|"+message+string(remaining, ' ');
 		
 		//cout << "Message is \n" << message << "******\n"; 
-	
-		unsigned char nonce[crypto_secretbox_NONCEBYTES];
-		unsigned char ciphertext[crypto_secretbox_MACBYTES + MESSAGE_LEN];
-
-		randombytes_buf(nonce, sizeof nonce);
-		crypto_secretbox_easy(ciphertext, (const unsigned char*)message.c_str(), message.length(), nonce, peer.get_key_e());
 		
-		string ciphertext_s = get_hex(ciphertext, crypto_secretbox_MACBYTES + MESSAGE_LEN);
+		unsigned char ciphertext[CIPHERTEXT_LEN];
 	
-		//cout << "Ciphertext is " << get_hex(ciphertext, crypto_secretbox_MACBYTES + MESSAGE_LEN) << "\n";
+//		unsigned char nonce[crypto_secretbox_NONCEBYTES];
+//		randombytes_buf(nonce, sizeof nonce);
+		crypto_secretbox_easy(ciphertext, (const unsigned char*)message.c_str(), message.length(), NONCE, peer.get_key_e());
 		
-		client.client->call("store_message", round.get_label_s(), ciphertext_s);
+		string ciphertext_s = get_hex(ciphertext, CIPHERTEXT_LEN);
+	
+		cout << "Ciphertext is : " << ciphertext_s << "\n";
+		
+		client.client->call("store_message", cur_round.get_label_s(), ciphertext_s);
 		
 		
 		//TODO move lower part when retrieving messages
 		
-		if (sodium_hex2bin(ciphertext, crypto_secretbox_MACBYTES + MESSAGE_LEN, ciphertext_s.c_str(), ciphertext_s.length(), NULL, NULL, NULL) == -1)
-		{
-			cout << "Aborting. Peer public key corrupt\n";
-		    //return false;
-		}
+//		if (sodium_hex2bin(ciphertext, CIPHERTEXT_LEN, ciphertext_s.c_str(), ciphertext_s.length(), NULL, NULL, NULL) == -1)
+//		{
+//			cout << "Aborting. Peer public key corrupt\n";
+//		    //return false;
+//		}
 
-		unsigned char decrypted[MESSAGE_LEN];
-		if (crypto_secretbox_open_easy(decrypted, ciphertext, crypto_secretbox_MACBYTES + MESSAGE_LEN, nonce, peer.get_key_e()) != 0) {
-			/* message forged! */
-		}
-		
-		cout << "Decrypted is " << string((const char *)decrypted, MESSAGE_LEN) << "\n";		
+//		unsigned char decrypted[MESSAGE_LEN];
+//		if (crypto_secretbox_open_easy(decrypted, ciphertext, CIPHERTEXT_LEN, NONCE, peer.get_key_e()) != 0) {
+//			/* message forged! */
+//		}
+//		
+//		cout << "Decrypted is " << string((const char *)decrypted, MESSAGE_LEN) << "\n";		
 	}
+}
+
+void retrieve_msg()
+{
+	//TODO get label mapping
+	auto label_map = client.client->call("get_label_mapping").as<mapping>().label_map;
+	int index;
+	
+	//TODO get index from label mapping
+	for(auto tup : label_map)
+	{
+		string label = get<0>(tup);
+		cout << "label is " << label << " and index is " <<  get<1>(tup) << "\n";
+		if(!label.compare(cur_round.get_label_r()))
+		{
+			index = get<1>(tup);
+			break;
+		}
+	}
+	
+	//TODO get msg using PIR
+	
+	
+	//DONE decrypting message
+	string ciphertext_s; //some retrieved message from server for given label
+	unsigned char ciphertext[CIPHERTEXT_LEN];
+	unsigned char decrypted[MESSAGE_LEN];
+	
+	if (sodium_hex2bin(ciphertext, CIPHERTEXT_LEN, ciphertext_s.c_str(), ciphertext_s.length(), NULL, NULL, NULL) == -1)
+	{
+		cout << "Aborting. Peer message corrupt\n";
+	    //return false;
+	}
+	
+	//TODO remove remove constant nonce and get from server each round
+	//	unsigned char nonce[crypto_secretbox_NONCEBYTES];
+	//	randombytes_buf(nonce, sizeof nonce);
+	
+	if (crypto_secretbox_open_easy(decrypted, ciphertext, CIPHERTEXT_LEN, NONCE, peer.get_key_e()) != 0) {
+		/* message forged! */
+	}
+	
+	cout << "Decrypted is " << string((const char *)decrypted, MESSAGE_LEN) << "\n";
 }
 
 void initialize_new_round(std::string round_id) {
 
-    round.set_round_id(round_id);
-    cout << "New round: " << round.get_round_id() << std::endl;
+    cur_round.set_round_id(round_id);
+    cout << "New round: " << cur_round.get_round_id() << std::endl;
     
     if(peer_joined)
     {
     	create_round_labels();
     	send_message();
+    	//sleep(5000);
+    	retrieve_msg();
     }
 }
 
 void create_round_labels()
 {
-	string s_str = round.get_round_id()+"||"+to_string(peer.get_peer_id());
-	string r_str = round.get_round_id()+"||"+to_string(client.get_id());
+	string s_str = cur_round.get_round_id()+"||"+to_string(peer.get_peer_id());
+	string r_str = cur_round.get_round_id()+"||"+to_string(client.get_id());
 	
 	unsigned char hash[crypto_auth_hmacsha256_BYTES];
 	
 	crypto_auth_hmacsha256(hash, (const unsigned char *)s_str.c_str(), s_str.length(), peer.get_key_l());
-	round.set_label_s(get_hex(hash, sizeof hash));
-	//cout << "label_s : " << round.get_label_s() << "\n";
+	cur_round.set_label_s(get_hex(hash, sizeof hash));
+	//cout << "label_s : " << cur_round.get_label_s() << "\n";
 	
 	crypto_auth_hmacsha256(hash, (const unsigned char *)r_str.c_str(), r_str.length(), peer.get_key_l());
-	round.set_label_r(get_hex(hash, sizeof hash));
-	//cout << "label_r : " << round.get_label_r() << "\n";;
+	cur_round.set_label_r(get_hex(hash, sizeof hash));
+	//cout << "label_r : " << cur_round.get_label_r() << "\n";;
 	
 }
 
@@ -286,6 +332,8 @@ int main(int argc, char **argv) {
 		return 0;
 	}
 	
+	cout << "Nonce size is " <<crypto_secretbox_NONCEBYTES << "\n";
+	
 	init();
 			
 	int peer_id;
@@ -329,8 +377,6 @@ int main(int argc, char **argv) {
 		}
 		
 	}
-
-	//TODO - client communication with rounds 
 	
 	return 0;
 }
