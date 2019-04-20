@@ -72,6 +72,37 @@ void register_client(rpc::client *client, int id, string ip, unsigned char* publ
 	client->call("set_client_key", id, ip, get_hex(public_key, crypto_kx_PUBLICKEYBYTES));
 }
 
+void initialize_new_round(std::string round_id) {
+
+    cur_round.set_round_id(round_id);
+    cout << "New round: " << cur_round.get_round_id() << std::endl;
+    
+    if(peer_joined)
+    {
+    	create_round_labels();
+    	send_message();
+    	//sleep(5000);
+    	retrieve_msg();
+    }
+}
+
+void create_round_labels()
+{
+	string s_str = cur_round.get_round_id()+"||"+to_string(peer.get_peer_id());
+	string r_str = cur_round.get_round_id()+"||"+to_string(client.get_id());
+	
+	unsigned char hash[crypto_auth_hmacsha256_BYTES];
+	
+	crypto_auth_hmacsha256(hash, (const unsigned char *)s_str.c_str(), s_str.length(), peer.get_key_l());
+	cur_round.set_label_s(get_hex(hash, sizeof hash));
+	//cout << "label_s : " << cur_round.get_label_s() << "\n";
+	
+	crypto_auth_hmacsha256(hash, (const unsigned char *)r_str.c_str(), r_str.length(), peer.get_key_l());
+	cur_round.set_label_r(get_hex(hash, sizeof hash));
+	//cout << "label_r : " << cur_round.get_label_r() << "\n";;
+	
+}
+
 void send_message()
 {
 	//TODO send dummy message
@@ -166,37 +197,6 @@ void retrieve_msg()
 	}
 	
 	cout << "Decrypted is " << string((const char *)decrypted, MESSAGE_LEN) << "\n";
-}
-
-void initialize_new_round(std::string round_id) {
-
-    cur_round.set_round_id(round_id);
-    cout << "New round: " << cur_round.get_round_id() << std::endl;
-    
-    if(peer_joined)
-    {
-    	create_round_labels();
-    	send_message();
-    	//sleep(5000);
-    	retrieve_msg();
-    }
-}
-
-void create_round_labels()
-{
-	string s_str = cur_round.get_round_id()+"||"+to_string(peer.get_peer_id());
-	string r_str = cur_round.get_round_id()+"||"+to_string(client.get_id());
-	
-	unsigned char hash[crypto_auth_hmacsha256_BYTES];
-	
-	crypto_auth_hmacsha256(hash, (const unsigned char *)s_str.c_str(), s_str.length(), peer.get_key_l());
-	cur_round.set_label_s(get_hex(hash, sizeof hash));
-	//cout << "label_s : " << cur_round.get_label_s() << "\n";
-	
-	crypto_auth_hmacsha256(hash, (const unsigned char *)r_str.c_str(), r_str.length(), peer.get_key_l());
-	cur_round.set_label_r(get_hex(hash, sizeof hash));
-	//cout << "label_r : " << cur_round.get_label_r() << "\n";;
-	
 }
 
 void initialize_client(int id, string master_ip, int master_port)

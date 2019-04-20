@@ -45,13 +45,13 @@ string getIPAddress();
 
 void register_client(rpc::client *, int, string, unsigned char*);
 
-void send_message();
-
-void retrieve_msg();
-
 void initialize_new_round(std::string round_id);
 
 void create_round_labels();
+
+void send_message();
+
+void retrieve_msg();
 
 void initialize_client(int, string, int);
 
