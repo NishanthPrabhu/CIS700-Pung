@@ -10,11 +10,14 @@
 #include "client_info.h"
 #include "rpc/client.h"
 #include "rpc/rpc_error.h"
+#include "SealPIR/pir.hpp"
 #include <boost/algorithm/string.hpp>
 
 std::map<int, client_info> keys_map;
 std::string current_round;
 std::vector<std::tuple<std::string, std::string>> message_store; 
+
+using namespace seal;
 
 /**
  *
@@ -28,13 +31,13 @@ std::vector<std::tuple<std::string, std::string>> message_store;
  */
 void set_client_public_key(int client_id, std::string const& client_ip,
                            std::vector<unsigned char> const& publickey, std::string const& galoiskey) {
-	client_info info(client_id, client_ip, publickey, galoiskey);
+	client_info info(client_id, client_ip, publickey, deserialize_galoiskeys(galoiskey));
     keys_map[client_id] = info;
 }
 
 void set_and_propagate_client_public_key(int client_id, std::string const& client_ip,
                                     std::vector<unsigned char> const& publickey, std::string const& galoiskey) {
-	client_info info(client_id, client_ip, publickey, galoiskey);
+	client_info info(client_id, client_ip, publickey, deserialize_galoiskeys(galoiskey));
     keys_map.emplace(client_id, info);
 
 	for (server_info info : slaves) {
@@ -50,7 +53,7 @@ void set_and_propagate_client_public_key(int client_id, std::string const& clien
         try {
             const uint64_t short_timeout = 1000;
             client.set_timeout(short_timeout);
-            client.call("set_client_key", client_id, client_ip, publickey);
+            client.call("set_client_key", client_id, client_ip, publickey, galoiskey);
         } catch (rpc::timeout &t) {
             std::cout << "Slave not responding..skip" << std::endl;    
         }    

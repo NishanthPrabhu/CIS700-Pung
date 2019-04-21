@@ -67,9 +67,9 @@ string getIPAddress(){
     return ipAddress;
 }
 
-void register_client(rpc::client *rpcclient, int id, string ip)
+void register_client(rpc::client *rpcclient, int id, string ip, string galois_keys)
 {
-	rpcclient->call("set_client_key", id, ip, client.get_public_key());
+	rpcclient->call("set_client_key", id, ip, client.get_public_key(), galois_keys);
 }
 
 void initialize_new_round(std::string round_id, vector<unsigned char> nonce) {
@@ -223,8 +223,15 @@ void initialize_client(int id, string master_ip, int master_port)
     rpc::client *rpc_client = new rpc::client(master_ip, master_port);
     string ip = getIPAddress() + ":" + std::to_string(RECEIVE_PORT+id);
     std::cout << ip << std::endl;
-    
-    register_client(rpc_client, id, ip); 
+
+    // Set up for PIR
+
+    params = new EncryptionParameters(scheme_type::BFV);
+    gen_params(number_of_items, size_per_item, N, logt, d, *params, pir_params);
+    pir_client = new PIRClient(*params, pir_params);
+    //*galois_keys = pir_client->generate_galois_keys();
+    GaloisKeys galois_keys = pir_client->generate_galois_keys();
+    register_client(rpc_client, id, ip, serialize_galoiskeys(galois_keys)); 
     client.init_msg_client(id, ip, rpc_client, master_ip, master_port);
 
     // Setting up rpc server with async callbacks to process rounds information from server
@@ -278,7 +285,7 @@ bool create_comm_keys(int peer_id)
     	return false;
     }
 	
-	peer.set_peer_info(client_info(peer_id, "", key, ""));
+	peer.set_peer_info(client_info(peer_id, "", key, NULL));
 	//peer.set_comm_keys(rx, tx);
 	
 	cout << "Key_e : " << get_hex(peer.get_key_l().data(), crypto_kx_SESSIONKEYBYTES) << "\n";

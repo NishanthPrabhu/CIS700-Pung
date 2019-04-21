@@ -12,9 +12,11 @@
 #include <cstdlib>
 #include <boost/algorithm/string.hpp>
 
+#include "SealPIR/pir_client.hpp"
 #include "msg_client.h"
 
 using namespace::std;
+using namespace seal;
 
 #define MESSAGE_LEN 256
 #define CIPHERTEXT_LEN (crypto_secretbox_MACBYTES + MESSAGE_LEN)
@@ -35,6 +37,16 @@ string message;
 queue<string> msgs;
 round_info cur_round;
 bool peer_joined = false;
+
+uint64_t number_of_items = 1 << 12;
+uint64_t size_per_item = CIPHERTEXT_LEN;
+uint32_t N = 2048;
+uint32_t logt = 12;
+uint32_t d = 3;
+PIRClient *pir_client;
+EncryptionParameters *params;
+PirParams pir_params;
+//GaloisKeys *galois_keys;
 
 static void init();
 

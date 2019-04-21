@@ -9,7 +9,6 @@
 #include <string>
 #include "rpc/client.h"
 #include "master_callbacks.h"
-#include "bloom_filter.hpp"
 #include <boost/algorithm/string.hpp>
 using namespace::std;
 

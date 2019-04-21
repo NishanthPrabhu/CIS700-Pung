@@ -2,7 +2,6 @@
 // Created by Nishanth Prabhu on 28/03/19.
 //
 #include <map>
-#include "bloom_filter.hpp"
 #include "rpc/msgpack.hpp"
 
 #ifndef CIS700_PUNG_MASTER_CALLBACKS_H

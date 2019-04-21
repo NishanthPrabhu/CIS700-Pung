@@ -9,7 +9,6 @@
 #include "rpc/msgpack.hpp"
 #include "rpc/client.h"
 #include "rpc/rpc_error.h"
-#include "bloom_filter.hpp"
 #include <boost/algorithm/string.hpp>
 #include <vector>
 
@@ -47,6 +46,7 @@ bool set_client_public_key(int client_id, std::string const& client_ip,
             std::cout << "Slave not responding..skip" << std::endl;
             continue;
         }
+
         break;
     }
         

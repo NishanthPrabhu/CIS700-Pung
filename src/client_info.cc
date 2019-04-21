@@ -8,11 +8,11 @@
 client_info::client_info(){};
 
 client_info::client_info(int client_id, std::string const& client_ip,
-                         std::vector<unsigned char> const& publickey, std::string const& galoiskey) {
+                         std::vector<unsigned char> const& publickey, GaloisKeys* galoiskeys) {
 	this->client_id = client_id;
 	this->client_ip = client_ip;
 	this->publickey = publickey;
-    this->galoiskey = galoiskey;
+    this->galoiskeys = galoiskeys;
 }
 
 int client_info::get_client_id() {
@@ -27,6 +27,6 @@ std::vector<unsigned char> client_info::get_public_key() {
 	return publickey;
 }
 
-std::string client_info::get_galois_key() {
-    return galoiskey;
+GaloisKeys* client_info::get_galois_keys() {
+    return galoiskeys;
 }
