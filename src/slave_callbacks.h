@@ -10,8 +10,10 @@
 #include<vector>
 
 void initialize_new_round(std::string round_id);
-void set_client_public_key(int client_id, std::string const& client_ip, std::vector<unsigned char> const&);
-void set_and_propagate_client_public_key(int client_id, std::string const& client_ip, std::vector<unsigned char> const &publickey);
+void set_client_public_key(int client_id, std::string const& client_ip,
+                           std::vector<unsigned char> const&, std::string const&);
+void set_and_propagate_client_public_key(int client_id, std::string const& client_ip,
+                        std::vector<unsigned char> const &publickey, std::string const& galoiskey);
 std::vector<unsigned char> get_public_key(int client_id);
 void store_and_propagate_message(int index, std::string label, std::string message);
 void store_message(int index, std::string label, std::string message);

@@ -16,7 +16,8 @@ struct mapping {
 };
 
 extern std::map<int, std::string> client_address_map;
-bool set_client_public_key(int client_id, std::string const& client_ip, std::vector<unsigned char> const&);
+bool set_client_public_key(int client_id, std::string const& client_ip,
+                           std::vector<unsigned char> const&, std::string const& galoiskey);
 std::vector<unsigned char> get_client_public_key(int client_id);
 void store_client_message(std::string label, std::string message);
 std::string retrieve_client_message();

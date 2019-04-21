@@ -270,7 +270,7 @@ bool create_comm_keys(int peer_id)
     	return false;
     }
 	
-	peer.set_peer_info(client_info(peer_id, "", key));
+	peer.set_peer_info(client_info(peer_id, "", key, ""));
 	//peer.set_comm_keys(rx, tx);
 	
 	cout << "Key_e : " << get_hex(peer.get_key_l().data(), crypto_kx_SESSIONKEYBYTES) << "\n";

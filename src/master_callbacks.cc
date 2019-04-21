@@ -27,7 +27,8 @@ mapping label_mapping;
  * to a string before sending. easier than dealing with msgpack directly.
  * Size is 32 bytes, so unpacking into a unsigned char array ourselves is easy.
  */
-bool set_client_public_key(int client_id, std::string const& client_ip, std::vector<unsigned char> const& publickey) {
+bool set_client_public_key(int client_id, std::string const& client_ip,
+                           std::vector<unsigned char> const& publickey, std::string const& galoiskey) {
 	std::cout<<"Setting public key"<<std::endl;
     client_address_map[client_id] = client_ip;
 
@@ -42,7 +43,7 @@ bool set_client_public_key(int client_id, std::string const& client_ip, std::vec
             const uint64_t short_timeout = 7000;
             client.set_timeout(short_timeout);
             std::vector< std::vector<std::string> > testing;
-            client.call("set_and_propagate_client_key", testing, client_id, client_ip, publickey);
+            client.call("set_and_propagate_client_key", testing, client_id, client_ip, publickey, galoiskey);
         } catch (rpc::timeout &t) {
             std::cout << "Slave not responding..skip" << std::endl;
             continue;
