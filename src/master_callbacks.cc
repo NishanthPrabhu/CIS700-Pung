@@ -6,10 +6,12 @@
 #include "master_callbacks.h"
 #include "master_server.h"
 #include "server_info.h"
+#include "rpc/msgpack.hpp"
 #include "rpc/client.h"
 #include "rpc/rpc_error.h"
 #include "bloom_filter.hpp"
 #include <boost/algorithm/string.hpp>
+#include <vector>
 
 std::map<int, std::string> client_address_map;
 
@@ -25,7 +27,7 @@ mapping label_mapping;
  * to a string before sending. easier than dealing with msgpack directly.
  * Size is 32 bytes, so unpacking into a unsigned char array ourselves is easy.
  */
-bool set_client_public_key(int client_id, std::string const& client_ip, std::string const& publickey) {
+bool set_client_public_key(int client_id, std::string const& client_ip, std::vector<unsigned char> const& publickey) {
 	std::cout<<"Setting public key"<<std::endl;
     client_address_map[client_id] = client_ip;
 
@@ -39,7 +41,8 @@ bool set_client_public_key(int client_id, std::string const& client_ip, std::str
         try {
             const uint64_t short_timeout = 7000;
             client.set_timeout(short_timeout);
-            client.call("set_and_propagate_client_key", client_id, client_ip, publickey);
+            std::vector< std::vector<std::string> > testing;
+            client.call("set_and_propagate_client_key", testing, client_id, client_ip, publickey);
         } catch (rpc::timeout &t) {
             std::cout << "Slave not responding..skip" << std::endl;
             continue;
@@ -79,29 +82,10 @@ mapping get_label_mapping() {
     return label_mapping;
 }    
 
-/*
-bloom_filter get_label_mapping() {
-    std::cout << "Staring bloom filter generation.." << std::endl;
-    bloom_parameters parameters;
-    parameters.projected_element_count = 100;
-    //parameters.false_positive_probability = 0.000;
-    if (!parameters) {
-        std::cout << "Error - Invalid set of bloom filter parameters!" << std::endl;
-        assert (false);
-    }
-
-    parameters.compute_optimal_parameters();
-    bloom_filter filter(parameters);
-   
-    std::cout << "Generating bloom filter.." << std::endl;
-    for (int i = 0; i < label_mapping.size(); i++) {
-        auto entry = label_mapping[i];
-        std::cout << "Adding to bf: " << std::get<0>(entry) << " now" << std::endl;
-        filter.insert(std::get<0>(entry));
-    }    
-    return filter;
-}*/
-
+void test_unsigned_char(std::vector<unsigned char> buff) {
+    RPCLIB_MSGPACK::sbuffer sbuf;
+    RPCLIB_MSGPACK::packer<RPCLIB_MSGPACK::sbuffer> packer(sbuf);
+}
 
 void store_client_message(std::string label, std::string message) {
   	int slave_index = get_slave_index();

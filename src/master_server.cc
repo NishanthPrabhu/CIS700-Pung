@@ -12,9 +12,17 @@
 #include "rpc/client.h"
 #include "rpc/rpc_error.h"
 #include "master_server.h"
+#include "SealPIR/pir.hpp"
 #include <boost/algorithm/string.hpp>
 
+using namespace seal;
+
 std::vector<server_info> slaves;
+uint64_t number_of_items = 1 << 12;
+uint64_t size_per_item = 288;
+uint32_t N = 2048;
+uint32_t logt = 12;
+uint32_t d = 5;
 
 server_info* get_master_server(std::string server_file) {
 	std::ifstream filereader(server_file);
@@ -157,6 +165,7 @@ void start_master_server(server_info *info) {
 	srv.bind("store_message", &store_client_message); // Client sends message to store
 	srv.bind("retrieve_message", &retrieve_client_message); // Client retrieves message
     srv.bind("get_label_mapping", &get_label_mapping);
+    srv.bind("test_unsigned_char", &test_unsigned_char);
     srv.async_run(3);
     std::cin.ignore();
 }

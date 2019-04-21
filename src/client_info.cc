@@ -3,11 +3,11 @@
 //
 
 #include "client_info.h"
-
+#include <vector>
 
 client_info::client_info(){};
 
-client_info::client_info(int client_id, std::string const& client_ip, std::string const& publickey) {
+client_info::client_info(int client_id, std::string const& client_ip, std::vector<unsigned char> const& publickey) {
 	this->client_id = client_id;
 	this->client_ip = client_ip;
 	this->publickey = publickey;
@@ -21,6 +21,6 @@ string client_info::get_client_ip() {
 	return client_ip;
 }
 
-string client_info::get_public_key() {
+std::vector<unsigned char> client_info::get_public_key() {
 	return publickey;
 }

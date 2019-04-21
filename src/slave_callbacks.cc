@@ -26,7 +26,7 @@ std::vector<std::tuple<std::string, std::string>> message_store;
  * to a string before sending. easier than dealing with msgpack directly.
  * Size is 32 bytes, so unpacking into a unsigned char array ourselves is easy.
  */
-void set_client_public_key(int client_id, std::string const& client_ip, std::string const& publickey) {
+void set_client_public_key(int client_id, std::string const& client_ip, std::vector<unsigned char> const& publickey) {
 	client_info info(client_id, client_ip, publickey);
     std::cout << "Setting public key locally for " << client_ip << ", key: " << publickey << std::endl;
     keys_map[client_id] = info;
