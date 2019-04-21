@@ -67,77 +67,77 @@ string getIPAddress(){
     return ipAddress;
 }
 
-void register_client(rpc::client *client, int id, string ip, unsigned char* public_key)
+void register_client(rpc::client *rpcclient, int id, string ip)
 {
-	client->call("set_client_key", id, ip, get_hex(public_key, crypto_kx_PUBLICKEYBYTES));
+	rpcclient->call("set_client_key", id, ip, client.get_public_key());
 }
 
 void initialize_new_round(std::string round_id) {
 
-    cur_round.set_round_id(round_id);
-    cout << "New round: " << cur_round.get_round_id() << std::endl;
-    
-    if(peer_joined)
-    {
-    	create_round_labels();
-    	send_message();
-    	//sleep(5000);
-    	retrieve_msg();
-    }
+//    cur_round.set_round_id(round_id);
+//    cout << "New round: " << cur_round.get_round_id() << std::endl;
+//    
+//    if(peer_joined)
+//    {
+//    	create_round_labels();
+//    	send_message();
+//    	//sleep(5000);
+//    	retrieve_msg();
+//    }
 }
 
 void create_round_labels()
 {
-	string s_str = cur_round.get_round_id()+"||"+to_string(peer.get_peer_id());
-	string r_str = cur_round.get_round_id()+"||"+to_string(client.get_id());
-	
-	unsigned char hash[crypto_auth_hmacsha256_BYTES];
-	
-	crypto_auth_hmacsha256(hash, (const unsigned char *)s_str.c_str(), s_str.length(), peer.get_key_l());
-	cur_round.set_label_s(get_hex(hash, sizeof hash));
-	//cout << "label_s : " << cur_round.get_label_s() << "\n";
-	
-	crypto_auth_hmacsha256(hash, (const unsigned char *)r_str.c_str(), r_str.length(), peer.get_key_l());
-	cur_round.set_label_r(get_hex(hash, sizeof hash));
+//	string s_str = cur_round.get_round_id()+"||"+to_string(peer.get_peer_id());
+//	string r_str = cur_round.get_round_id()+"||"+to_string(client.get_id());
+//	
+//	unsigned char hash[crypto_auth_hmacsha256_BYTES];
+//	
+//	crypto_auth_hmacsha256(hash, (const unsigned char *)s_str.c_str(), s_str.length(), peer.get_key_l());
+//	cur_round.set_label_s(get_hex(hash, sizeof hash));
+//	//cout << "label_s : " << cur_round.get_label_s() << "\n";
+//	
+//	crypto_auth_hmacsha256(hash, (const unsigned char *)r_str.c_str(), r_str.length(), peer.get_key_l());
+//	cur_round.set_label_r(get_hex(hash, sizeof hash));
 	//cout << "label_r : " << cur_round.get_label_r() << "\n";;
 	
 }
 
 void send_message()
 {
-	//TODO send dummy message
-	if(!msgs.empty())
-	{
-		string message = msgs.front();
-		msgs.pop();
-		
-		int cur_length = message.length();
-		cur_length = to_string(cur_length).length()+cur_length+1;
-		
-		if(cur_length > MESSAGE_LEN)
-		{
-			cout << "Packed message length greater than MAX_LENGTH\n";
-			return;
-		}
-		
-		int remaining = MESSAGE_LEN - cur_length;
-		
-		message = to_string(cur_length)+"|"+message+string(remaining, ' ');
-		
-		//cout << "Message is \n" << message << "******\n"; 
-		
-		unsigned char ciphertext[CIPHERTEXT_LEN];
-	
-//		unsigned char nonce[crypto_secretbox_NONCEBYTES];
-//		randombytes_buf(nonce, sizeof nonce);
-		crypto_secretbox_easy(ciphertext, (const unsigned char*)message.c_str(), message.length(), NONCE, peer.get_key_e());
-		
-		string ciphertext_s = get_hex(ciphertext, CIPHERTEXT_LEN);
-	
-		cout << "Ciphertext is : " << ciphertext_s << "\n";
-		
-		client.client->call("store_message", cur_round.get_label_s(), ciphertext_s);
-		
+//	//TODO send dummy message
+//	if(!msgs.empty())
+//	{
+//		string message = msgs.front();
+//		msgs.pop();
+//		
+//		int cur_length = message.length();
+//		cur_length = to_string(cur_length).length()+cur_length+1;
+//		
+//		if(cur_length > MESSAGE_LEN)
+//		{
+//			cout << "Packed message length greater than MAX_LENGTH\n";
+//			return;
+//		}
+//		
+//		int remaining = MESSAGE_LEN - cur_length;
+//		
+//		message = to_string(cur_length)+"|"+message+string(remaining, ' ');
+//		
+//		//cout << "Message is \n" << message << "******\n"; 
+//		
+//		unsigned char ciphertext[CIPHERTEXT_LEN];
+//	
+////		unsigned char nonce[crypto_secretbox_NONCEBYTES];
+////		randombytes_buf(nonce, sizeof nonce);
+//		crypto_secretbox_easy(ciphertext, (const unsigned char*)message.c_str(), message.length(), NONCE, peer.get_key_e());
+//		
+//		string ciphertext_s = get_hex(ciphertext, CIPHERTEXT_LEN);
+//	
+//		cout << "Ciphertext is : " << ciphertext_s << "\n";
+//		
+//		client.client->call("store_message", cur_round.get_label_s(), ciphertext_s);
+//		
 		
 		//TODO move lower part when retrieving messages
 		
@@ -153,74 +153,71 @@ void send_message()
 //		}
 //		
 //		cout << "Decrypted is " << string((const char *)decrypted, MESSAGE_LEN) << "\n";		
-	}
+//	}
 }
 
 void retrieve_msg()
 {
 	//TODO get label mapping
-	auto label_map = client.client->call("get_label_mapping").as<mapping>().label_map;
-	int index;
-	
-	//TODO get index from label mapping
-	for(auto tup : label_map)
-	{
-		string label = get<0>(tup);
-		cout << "label is " << label << " and index is " <<  get<1>(tup) << "\n";
-		if(!label.compare(cur_round.get_label_r()))
-		{
-			index = get<1>(tup);
-			break;
-		}
-	}
-	
-	//TODO get msg using PIR
-	
-	
-	//DONE decrypting message
-	string ciphertext_s; //some retrieved message from server for given label
-	unsigned char ciphertext[CIPHERTEXT_LEN];
-	unsigned char decrypted[MESSAGE_LEN];
-	
-	if (sodium_hex2bin(ciphertext, CIPHERTEXT_LEN, ciphertext_s.c_str(), ciphertext_s.length(), NULL, NULL, NULL) == -1)
-	{
-		cout << "Aborting. Peer message corrupt\n";
-	    //return false;
-	}
-	
-	//TODO remove remove constant nonce and get from server each round
-	//	unsigned char nonce[crypto_secretbox_NONCEBYTES];
-	//	randombytes_buf(nonce, sizeof nonce);
-	
-	if (crypto_secretbox_open_easy(decrypted, ciphertext, CIPHERTEXT_LEN, NONCE, peer.get_key_e()) != 0) {
-		/* message forged! */
-	}
-	
-	cout << "Decrypted is " << string((const char *)decrypted, MESSAGE_LEN) << "\n";
+//	auto label_map = client.client->call("get_label_mapping").as<mapping>().label_map;
+//	int index;
+//	
+//	//TODO get index from label mapping
+//	for(auto tup : label_map)
+//	{
+//		string label = get<0>(tup);
+//		cout << "label is " << label << " and index is " <<  get<1>(tup) << "\n";
+//		if(!label.compare(cur_round.get_label_r()))
+//		{
+//			index = get<1>(tup);
+//			break;
+//		}
+//	}
+//	
+//	//TODO get msg using PIR
+//	
+//	
+//	//DONE decrypting message
+//	string ciphertext_s; //some retrieved message from server for given label
+//	unsigned char ciphertext[CIPHERTEXT_LEN];
+//	unsigned char decrypted[MESSAGE_LEN];
+//	
+//	if (sodium_hex2bin(ciphertext, CIPHERTEXT_LEN, ciphertext_s.c_str(), ciphertext_s.length(), NULL, NULL, NULL) == -1)
+//	{
+//		cout << "Aborting. Peer message corrupt\n";
+//	    //return false;
+//	}
+//	
+//	//TODO remove remove constant nonce and get from server each round
+//	//	unsigned char nonce[crypto_secretbox_NONCEBYTES];
+//	//	randombytes_buf(nonce, sizeof nonce);
+//	
+//	if (crypto_secretbox_open_easy(decrypted, ciphertext, CIPHERTEXT_LEN, NONCE, peer.get_key_e()) != 0) {
+//		/* message forged! */
+//	}
+//	
+//	cout << "Decrypted is " << string((const char *)decrypted, MESSAGE_LEN) << "\n";
 }
 
 void initialize_client(int id, string master_ip, int master_port)
 {
 	cout << "\n--------------------\nInitializing Client\n--------------------\n";
-	
-	unsigned char public_key[crypto_kx_PUBLICKEYBYTES];
-    unsigned char private_key[crypto_kx_SECRETKEYBYTES];
     
     cout << "Generating public private keypairs for client...\n";
-    crypto_box_keypair(public_key, private_key);
+    crypto_box_keypair(client.get_public_key().data(), client.get_private_key().data());
     
     cout << "For client : " << id << "\n";
     cout << "Public key: ";
-    cout << get_hex(public_key, sizeof public_key) << "\n";;
+    cout << get_hex(client.get_public_key().data(), client.get_public_key().size()) << "\n";;
     cout << "Private key: ";
-    cout << get_hex(private_key, sizeof private_key) << "\n";
+    cout << get_hex(client.get_private_key().data(), client.get_private_key().size()) << "\n";
     
     rpc::client *rpc_client = new rpc::client(master_ip, master_port);
     string ip = getIPAddress() + ":" + std::to_string(RECEIVE_PORT+id);
     std::cout << ip << std::endl;
     
-    register_client(rpc_client, id, ip, public_key); 
-    client.init_msg_client(id, ip, rpc_client, master_ip, master_port, public_key, private_key);
+    register_client(rpc_client, id, ip); 
+    client.init_msg_client(id, ip, rpc_client, master_ip, master_port);
 
     // Setting up rpc server with async callbacks to process rounds information from server
     rpc::server *srv = new rpc::server(RECEIVE_PORT+id);
@@ -232,35 +229,35 @@ void initialize_client(int id, string master_ip, int master_port)
 
 bool create_comm_keys(int peer_id)
 {
-	auto key = client.client->call("get_client_key", peer_id).as<std::string>();
+	auto key = client.client->call("get_client_key", peer_id).as<vector<unsigned char>>();
 	
-	if(key.empty())
+	if(key.size() == 0)
 	{
 		cout << "Peer not joined yet. Ask them to join the server or try again later\n";
 		return false;
 	}
 	
-	cout << "Peer public key is " << key << "\n";
+	//cout << "Peer public key is " << key << "\n";
 	
-	unsigned char peer_public[crypto_kx_PUBLICKEYBYTES];
-	
-	if (sodium_hex2bin(peer_public, crypto_kx_PUBLICKEYBYTES, key.c_str(), key.length(), NULL, NULL, NULL) == -1)
-	{
-		cout << "Aborting. Peer public key corrupt\n";
-        return false;
-    }	
+//	unsigned char peer_public[crypto_kx_PUBLICKEYBYTES];
+//	
+//	if (sodium_hex2bin(peer_public, crypto_kx_PUBLICKEYBYTES, key.c_str(), key.length(), NULL, NULL, NULL) == -1)
+//	{
+//		cout << "Aborting. Peer public key corrupt\n";
+//        return false;
+//    }	
     
-    unsigned char rx[crypto_kx_SESSIONKEYBYTES], tx[crypto_kx_SESSIONKEYBYTES];
+//    unsigned char rx[crypto_kx_SESSIONKEYBYTES], tx[crypto_kx_SESSIONKEYBYTES];
     
     int key_res;
     if(client.get_id() < peer_id)
-    	key_res = crypto_kx_server_session_keys(rx, tx, 
-    											client.get_public_key(), client.get_private_key(),
-    											peer_public);
+    	key_res = crypto_kx_server_session_keys(peer.get_key_l().data(), peer.get_key_e().data(), 
+    											client.get_public_key().data(), client.get_private_key().data(),
+    											key.data());
     else if(client.get_id() > peer_id)
-    	key_res = crypto_kx_client_session_keys(tx, rx, 
-    											client.get_public_key(), client.get_private_key(),
-    											peer_public);
+    	key_res = crypto_kx_client_session_keys(peer.get_key_e().data(), peer.get_key_l().data(), 
+    											client.get_public_key().data(), client.get_private_key().data(),
+    											key.data());
     else
     {
     	cout << "Both client ids cannot be same. Exiting try again\n";
@@ -274,10 +271,10 @@ bool create_comm_keys(int peer_id)
     }
 	
 	peer.set_peer_info(client_info(peer_id, "", key));
-	peer.set_comm_keys(rx, tx);
+	//peer.set_comm_keys(rx, tx);
 	
-	cout << "Key_e : " << get_hex(peer.get_key_l(), crypto_kx_SESSIONKEYBYTES) << "\n";
-    cout << "Key_l key: " << get_hex(peer.get_key_e(), crypto_kx_SESSIONKEYBYTES) << "\n";
+	cout << "Key_e : " << get_hex(peer.get_key_l().data(), crypto_kx_SESSIONKEYBYTES) << "\n";
+    cout << "Key_l key: " << get_hex(peer.get_key_e().data(), crypto_kx_SESSIONKEYBYTES) << "\n";
     
     peer_joined = true;
     

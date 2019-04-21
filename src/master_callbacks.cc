@@ -55,7 +55,7 @@ bool set_client_public_key(int client_id, std::string const& client_ip, std::vec
 
 std::vector<unsigned char> get_client_public_key(int client_id) {
 
-    std::string result = "";
+    std::vector<unsigned char> result;
     while (true) {
         int slave_index = get_slave_index();
 	    std::string slave_ip = slaves[slave_index].get_server_ip();
@@ -67,7 +67,7 @@ std::vector<unsigned char> get_client_public_key(int client_id) {
             const uint64_t short_timeout = 2000;
             client.set_timeout(short_timeout);
             std::cout << "Calling client\n";
-            result = client.call("get_client_key", client_id).as<std::string>();
+            result = client.call("get_client_key", client_id).as<std::vector<unsigned char>>();
         } catch (rpc::timeout &t) {
             std::cout << "Slave not responding..skip" << std::endl;
             continue;

@@ -21,34 +21,35 @@ class msg_client {
 	string ip;
 	string master_ip;
 	int master_port;
-	unsigned char public_key[crypto_kx_PUBLICKEYBYTES];
-    unsigned char private_key[crypto_kx_SECRETKEYBYTES];
+	vector<unsigned char> public_key;
+    vector<unsigned char> private_key;
     
 
 public:
 	rpc::client *client;
-	void init_msg_client(int,string, rpc::client*, string, int,
-					const unsigned char*, const unsigned char*);
+	msg_client();
+	void init_msg_client(int,string, rpc::client*, string, int);
 	int get_id();
 	string get_ip();
 	string get_master_ip();
 	int get_master_port();
-	unsigned char* get_public_key();
-	unsigned char* get_private_key();
+	vector<unsigned char>& get_public_key();
+	vector<unsigned char>& get_private_key();
     
 };
 
 class msg_peer {
 
     client_info peer;
-    unsigned char key_l[crypto_kx_SESSIONKEYBYTES];
-    unsigned char key_e[crypto_kx_SESSIONKEYBYTES];
+    vector<unsigned char> key_l;
+    vector<unsigned char> key_e;
     
 public:
+	msg_peer();
     void set_peer_info(client_info);
-    void set_comm_keys(const unsigned char*, const unsigned char*);
-    unsigned char* get_key_l();
-    unsigned char* get_key_e();
+    //void set_comm_keys(const unsigned char*, const unsigned char*);
+    vector<unsigned char>& get_key_l();
+    vector<unsigned char>& get_key_e();
     int get_peer_id();
 };
 
