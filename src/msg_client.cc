@@ -87,6 +87,16 @@ string round_info::get_round_id()
 	return round_id;
 }
 
+void round_info::set_nonce(vector<unsigned char> nonce)
+{
+	this->nonce = nonce;
+}
+
+vector<unsigned char>& round_info::get_nonce()
+{
+	return nonce;
+}
+
 void round_info::set_label_s(string label)
 {
 	label_s = label;

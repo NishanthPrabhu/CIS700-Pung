@@ -19,7 +19,6 @@ using namespace::std;
 #define MESSAGE_LEN 256
 #define CIPHERTEXT_LEN (crypto_secretbox_MACBYTES + MESSAGE_LEN)
 #define RECEIVE_PORT 40000
-#define NONCE ((const unsigned char *) "AiiNcWTaX3YakIYL5C7tpYbl")
 
 enum command
 {
@@ -45,7 +44,7 @@ string getIPAddress();
 
 void register_client(rpc::client *, int, string, unsigned char*);
 
-void initialize_new_round(std::string round_id);
+void initialize_new_round(std::string round_id, vector<unsigned char> nonce);
 
 void create_round_labels();
 

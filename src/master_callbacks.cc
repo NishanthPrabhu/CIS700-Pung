@@ -40,9 +40,8 @@ bool set_client_public_key(int client_id, std::string const& client_ip, std::vec
   	  
         try {
             const uint64_t short_timeout = 7000;
-            client.set_timeout(short_timeout);
-            std::vector< std::vector<std::string> > testing;
-            client.call("set_and_propagate_client_key", testing, client_id, client_ip, publickey);
+            client.set_timeout(short_timeout);	
+            client.call("set_and_propagate_client_key", client_id, client_ip, publickey);
         } catch (rpc::timeout &t) {
             std::cout << "Slave not responding..skip" << std::endl;
             continue;
