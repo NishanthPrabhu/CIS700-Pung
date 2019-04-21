@@ -88,17 +88,17 @@ void initialize_new_round(std::string round_id) {
 
 void create_round_labels()
 {
-//	string s_str = cur_round.get_round_id()+"||"+to_string(peer.get_peer_id());
-//	string r_str = cur_round.get_round_id()+"||"+to_string(client.get_id());
-//	
-//	unsigned char hash[crypto_auth_hmacsha256_BYTES];
-//	
-//	crypto_auth_hmacsha256(hash, (const unsigned char *)s_str.c_str(), s_str.length(), peer.get_key_l());
-//	cur_round.set_label_s(get_hex(hash, sizeof hash));
-//	//cout << "label_s : " << cur_round.get_label_s() << "\n";
-//	
-//	crypto_auth_hmacsha256(hash, (const unsigned char *)r_str.c_str(), r_str.length(), peer.get_key_l());
-//	cur_round.set_label_r(get_hex(hash, sizeof hash));
+	string s_str = cur_round.get_round_id()+"||"+to_string(peer.get_peer_id());
+	string r_str = cur_round.get_round_id()+"||"+to_string(client.get_id());
+	
+	unsigned char hash[crypto_auth_hmacsha256_BYTES];
+	
+	crypto_auth_hmacsha256(hash, (const unsigned char *)s_str.c_str(), s_str.length(), peer.get_key_l().data());
+	cur_round.set_label_s(get_hex(hash, sizeof hash));
+	//cout << "label_s : " << cur_round.get_label_s() << "\n";
+	
+	crypto_auth_hmacsha256(hash, (const unsigned char *)r_str.c_str(), r_str.length(), peer.get_key_l().data());
+	cur_round.set_label_r(get_hex(hash, sizeof hash));
 	//cout << "label_r : " << cur_round.get_label_r() << "\n";;
 	
 }
@@ -237,7 +237,7 @@ bool create_comm_keys(int peer_id)
 		return false;
 	}
 	
-	//cout << "Peer public key is " << key << "\n";
+	cout << "Peer public key is " << get_hex(key.data(), crypto_kx_PUBLICKEYBYTES) << "\n";
 	
 //	unsigned char peer_public[crypto_kx_PUBLICKEYBYTES];
 //	
@@ -274,7 +274,7 @@ bool create_comm_keys(int peer_id)
 	//peer.set_comm_keys(rx, tx);
 	
 	cout << "Key_e : " << get_hex(peer.get_key_l().data(), crypto_kx_SESSIONKEYBYTES) << "\n";
-    cout << "Key_l key: " << get_hex(peer.get_key_e().data(), crypto_kx_SESSIONKEYBYTES) << "\n";
+    cout << "Key_l : " << get_hex(peer.get_key_e().data(), crypto_kx_SESSIONKEYBYTES) << "\n";
     
     peer_joined = true;
     
