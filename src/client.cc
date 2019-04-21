@@ -72,18 +72,20 @@ void register_client(rpc::client *rpcclient, int id, string ip)
 	rpcclient->call("set_client_key", id, ip, client.get_public_key());
 }
 
-void initialize_new_round(std::string round_id) {
+void initialize_new_round(std::string round_id, vector<unsigned char> nonce) {
 
-//    cur_round.set_round_id(round_id);
-//    cout << "New round: " << cur_round.get_round_id() << std::endl;
-//    
-//    if(peer_joined)
-//    {
-//    	create_round_labels();
-//    	send_message();
+    cur_round.set_round_id(round_id);
+    cur_round.set_nonce(nonce);
+    
+    cout << "New round: " << cur_round.get_round_id() << "\nNonce : " << get_hex(nonce.data(), nonce.size()) << std::endl;
+    
+    if(peer_joined)
+    {
+    	create_round_labels();
+    	send_message();
 //    	//sleep(5000);
 //    	retrieve_msg();
-//    }
+    }
 }
 
 void create_round_labels()
@@ -95,49 +97,55 @@ void create_round_labels()
 	
 	crypto_auth_hmacsha256(hash, (const unsigned char *)s_str.c_str(), s_str.length(), peer.get_key_l().data());
 	cur_round.set_label_s(get_hex(hash, sizeof hash));
-	//cout << "label_s : " << cur_round.get_label_s() << "\n";
+	cout << "label_s : " << cur_round.get_label_s() << "\n";
 	
 	crypto_auth_hmacsha256(hash, (const unsigned char *)r_str.c_str(), r_str.length(), peer.get_key_l().data());
 	cur_round.set_label_r(get_hex(hash, sizeof hash));
-	//cout << "label_r : " << cur_round.get_label_r() << "\n";;
+	cout << "label_r : " << cur_round.get_label_r() << "\n";;
 	
 }
 
 void send_message()
 {
-//	//TODO send dummy message
-//	if(!msgs.empty())
-//	{
-//		string message = msgs.front();
-//		msgs.pop();
-//		
-//		int cur_length = message.length();
-//		cur_length = to_string(cur_length).length()+cur_length+1;
-//		
-//		if(cur_length > MESSAGE_LEN)
-//		{
-//			cout << "Packed message length greater than MAX_LENGTH\n";
-//			return;
-//		}
-//		
-//		int remaining = MESSAGE_LEN - cur_length;
-//		
-//		message = to_string(cur_length)+"|"+message+string(remaining, ' ');
-//		
-//		//cout << "Message is \n" << message << "******\n"; 
-//		
-//		unsigned char ciphertext[CIPHERTEXT_LEN];
-//	
-////		unsigned char nonce[crypto_secretbox_NONCEBYTES];
-////		randombytes_buf(nonce, sizeof nonce);
-//		crypto_secretbox_easy(ciphertext, (const unsigned char*)message.c_str(), message.length(), NONCE, peer.get_key_e());
-//		
-//		string ciphertext_s = get_hex(ciphertext, CIPHERTEXT_LEN);
-//	
-//		cout << "Ciphertext is : " << ciphertext_s << "\n";
-//		
-//		client.client->call("store_message", cur_round.get_label_s(), ciphertext_s);
-//		
+	//TODO send dummy message
+	if(!msgs.empty())
+	{
+		string message = msgs.front();
+		msgs.pop();
+		
+		int cur_length = message.length();
+		cur_length = to_string(cur_length).length()+cur_length+1;
+		
+		if(cur_length > MESSAGE_LEN)
+		{
+			cout << "Packed message length greater than MAX_LENGTH\n";
+			return;
+		}
+		
+		int remaining = MESSAGE_LEN - cur_length;
+		
+		message = to_string(cur_length)+"|"+message+string(remaining, ' ');
+		
+		//cout << "Message is \n" << message << "******\n"; 
+		
+		vector<unsigned char> ciphertext;
+		
+		ciphertext.resize(CIPHERTEXT_LEN);
+	
+//		unsigned char nonce[crypto_secretbox_NONCEBYTES];
+//		randombytes_buf(nonce, sizeof nonce);
+		crypto_secretbox_easy(ciphertext.data(),
+							 (const unsigned char*)message.c_str(),
+							 message.length(),
+							 cur_round.get_nonce().data(),
+							 peer.get_key_e().data());
+		
+		//string ciphertext_s = get_hex(ciphertext, CIPHERTEXT_LEN);
+	
+		//cout << "Ciphertext is : " << ciphertext_s << "\n";
+		
+		//client.client->call("store_message", cur_round.get_label_s(), ciphertext_s);
+		
 		
 		//TODO move lower part when retrieving messages
 		
@@ -153,7 +161,7 @@ void send_message()
 //		}
 //		
 //		cout << "Decrypted is " << string((const char *)decrypted, MESSAGE_LEN) << "\n";		
-//	}
+	}
 }
 
 void retrieve_msg()

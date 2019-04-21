@@ -56,12 +56,17 @@ public:
 class round_info {
 	
 	string round_id;
+	vector<unsigned char> nonce;
 	string label_s;
 	string label_r;
 	
 public:
 	void set_round_id(string id);
 	string get_round_id();
+	
+	void set_nonce(vector<unsigned char> nonce);
+	vector<unsigned char>& get_nonce();
+
 	
 	void set_label_s(string label);
 	string get_label_s();
