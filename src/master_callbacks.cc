@@ -53,7 +53,7 @@ bool set_client_public_key(int client_id, std::string const& client_ip, std::vec
     return true;
 }
 
-std::string get_client_public_key(int client_id) {
+std::vector<unsigned char> get_client_public_key(int client_id) {
 
     std::string result = "";
     while (true) {

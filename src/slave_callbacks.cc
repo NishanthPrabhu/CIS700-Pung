@@ -32,7 +32,7 @@ void set_client_public_key(int client_id, std::string const& client_ip, std::vec
     keys_map[client_id] = info;
 }
 
-void set_and_propagate_client_public_key(int client_id, std::string const& client_ip, std::string const& publickey) {
+void set_and_propagate_client_public_key(int client_id, std::string const& client_ip, std::vector<unsigned char> const& publickey) {
 	client_info info(client_id, client_ip, publickey);
     keys_map.emplace(client_id, info);
 
@@ -56,7 +56,7 @@ void set_and_propagate_client_public_key(int client_id, std::string const& clien
     }
 }
 
-std::string get_public_key(int client_id) {
+std::vector<unsigned char> get_public_key(int client_id) {
 	std::string result;
 
 	std::cout << "Returning result\n";
@@ -65,7 +65,7 @@ std::string get_public_key(int client_id) {
         return info.get_public_key();
     }
 
-	return "";
+	return std::vector<unsigned char>();
 }
 
 int send_index_vote() {
