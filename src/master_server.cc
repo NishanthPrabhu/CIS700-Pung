@@ -12,6 +12,7 @@
 #include "rpc/client.h"
 #include "rpc/rpc_error.h"
 #include "master_server.h"
+#include <sodium.h>
 //#include "SealPIR/pir.hpp"
 #include <boost/algorithm/string.hpp>
 
@@ -57,7 +58,7 @@ server_info* get_master_server(std::string server_file) {
 	return info;
 }
 
-void send_rounds_notice_clients(int round_number) {
+void send_rounds_notice_clients(int round_number, std::vector<unsigned char> nonce) {
     std::string round_id = "round_" + std::to_string(round_number);
 
     for (auto const& client : client_address_map) {
@@ -75,7 +76,7 @@ void send_rounds_notice_clients(int round_number) {
         try {
             const uint64_t short_timeout = 1000;
             rpcclient.set_timeout(short_timeout);
-            rpcclient.call("rounds_notice", round_id);
+            rpcclient.call("rounds_notice", round_id, nonce);
         } catch (rpc::timeout &t) {
             std::cout << "Client not responding..skip" << std::endl;
             continue;
@@ -136,12 +137,16 @@ void round_master(int round_length) {
 
     while (true) {
         round_number += 1;
-        
+       
+        std::vector<unsigned char> nonce;
+        nonce.resize(crypto_secretbox_NONCEBYTES);
+        randombytes_buf(nonce.data(), nonce.size());
+
         // Tell the slaves first, so that they can clear state.
         send_rounds_notice_slaves(round_number);
 
         // Tell all clients (So master needs to maintain a list of clients and their information)
-        send_rounds_notice_clients(round_number);
+        send_rounds_notice_clients(round_number, nonce);
 
         std::this_thread::sleep_for(std::chrono::milliseconds(round_length));
     }    
