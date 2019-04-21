@@ -1,3 +1,0 @@
-/home/vagrant/SealPIR/CMakeFiles/rebuild_cache.dir
-/home/vagrant/SealPIR/CMakeFiles/sealpir.dir
-/home/vagrant/SealPIR/CMakeFiles/edit_cache.dir

@@ -12,10 +12,10 @@
 #include "rpc/client.h"
 #include "rpc/rpc_error.h"
 #include "master_server.h"
-#include "SealPIR/pir.hpp"
+//#include "SealPIR/pir.hpp"
 #include <boost/algorithm/string.hpp>
 
-using namespace seal;
+//using namespace seal;
 
 std::vector<server_info> slaves;
 uint64_t number_of_items = 1 << 12;

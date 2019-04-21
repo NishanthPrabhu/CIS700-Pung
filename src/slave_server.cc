@@ -6,13 +6,13 @@
 #include "slave_callbacks.h"
 #include "rpc/server.h"
 #include "slave_server.h"
-#include "SealPIR/pir.hpp"
-#include "SealPIR/pir_client.hpp"
-#include "SealPIR/pir_server.hpp"
-#include <seal/seal.h>
+//#include "SealPIR/pir.hpp"
+//#include "SealPIR/pir_client.hpp"
+//#include "SealPIR/pir_server.hpp"
+//#include <seal/seal.h>
 #include <boost/algorithm/string.hpp>
 
-using namespace seal;
+//using namespace seal;
 
 std::vector<server_info> slaves;
 std::string slave_name;
@@ -23,8 +23,8 @@ uint32_t N = 2048;
 uint32_t logt = 12;
 uint32_t d = 3;
 
-EncryptionParameters *params;
-PirParams pir_params;
+//EncryptionParameters *params;
+//PirParams pir_params;
 
 server_info* get_slave_server(std::string server_file, std::string server_name) {
 	std::ifstream filereader(server_file);
@@ -62,13 +62,13 @@ server_info* get_slave_server(std::string server_file, std::string server_name) 
 	return info;
 }
 
-void initialize_pir() {
+/*void initialize_pir() {
     params = new EncryptionParameters(scheme_type::BFV);
     gen_params(number_of_items, size_per_item, N, logt, d, *params, pir_params);
-}
+}*/
 
 void start_slave_server(server_info *info) {
-	initialize_pir();
+	//initialize_pir();
     int port = info->get_port();
 	rpc::server srv(port);
 
