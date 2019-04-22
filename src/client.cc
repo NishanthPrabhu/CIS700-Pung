@@ -160,20 +160,12 @@ void send_message()
 void retrieve_msg()
 {
 	//TODO get label mapping
-	auto label_map = client.client->call("get_label_mapping").as<std::vector<std::tuple<std::string, int>>>();
-	int ele_index = -1;
+	auto label_map = client.client->call("get_label_mapping").as<std::map<std::string, int>>();
+    int ele_index = -1;
 	
-	//TODO get index from label mapping
-	for(auto tup : label_map)
-	{
-		string label = get<0>(tup);
-		cout << "label is " << label << " and index is " <<  get<1>(tup) << "\n";
-		if(!label.compare(cur_round.get_label_r()))
-		{
-			ele_index = get<1>(tup);
-			break;
-		}
-	}
+    if (label_map.find(cur_round.get_label_r()) != label_map.end()) {
+        ele_index = label_map[cur_round.get_label_r()];
+    }
 	
 	if(ele_index != -1)
 	{

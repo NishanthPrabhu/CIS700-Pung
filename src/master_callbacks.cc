@@ -13,7 +13,8 @@
 #include <vector>
 
 std::map<int, std::string> client_address_map;
-std::vector<std::tuple<std::string, int>> label_map;
+//std::vector<std::tuple<std::string, int>> label_map;
+std::map<std::string, int> label_map;
 
 /**
  *
@@ -77,7 +78,7 @@ std::vector<unsigned char> get_client_public_key(int client_id) {
     return result;
 }
 
-std::vector<std::tuple<std::string, int>> get_label_mapping() {
+std::map<std::string, int> get_label_mapping() {
     return label_map;
 }    
 
@@ -93,7 +94,7 @@ void store_client_message(std::string label, std::vector<unsigned char>const& me
     int port = slaves[slave_index].get_port();
 
     int index = get_label_index();
-    label_map.push_back(std::make_tuple(label, index));	
+    label_map[label] = index;
     std::cout << "Storing label: " << label << " at index: " << index << std::endl;
     rpc::client client(slave_ip, port);
 	client.call("store_and_propagate_message", index, label, message);
