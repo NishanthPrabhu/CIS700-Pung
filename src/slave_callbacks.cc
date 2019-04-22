@@ -123,7 +123,9 @@ std::string retrieve_message(int client_id, std::vector<std::string> serializedQ
     PirParams pir_params;
     gen_params(number_of_items, size_per_item, N, logt, d, params, pir_params);
     PIRServer server(params, pir_params);
-    server.set_galois_key(0, *galois_keys);
+    server.set_galois_key(client_id, *galois_keys);
+    server.set_database(move(db), number_of_items, size_per_item);
+    server.preprocess_database();
 
     // Deserialize the query
     ssize_t encrypted_count = 2;
@@ -131,8 +133,12 @@ std::string retrieve_message(int client_id, std::vector<std::string> serializedQ
     std::vector< std::vector<seal::Ciphertext> > pir_query;
     for (int i = 0; i < serializedQuery.size(); i++) {
         std::string cipher = serializedQuery[i];
-        pir_query.push_back(deserialize_ciphertexts(encrypted_count, cipher, CIPHERTEXT_LEN)); 
+        pir_query.push_back(deserialize_ciphertexts(encrypted_count, cipher, cipher.size())); 
     }
 
-    // TODO process query and serialized pirreply to string
+    PIRClient client(params, pir_params); // Dummy client object - generate reply requires 3 args, but 3rd
+                                          // one is unused
+    PirReply reply = server.generate_reply(pir_query, client_id, client);
+    std::string serialized_reply = serialize_ciphertexts(reply);
+    return serialized_reply;
 }
