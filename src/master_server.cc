@@ -129,7 +129,8 @@ void round_master(int round_length) {
 
     while (true) {
         round_number += 1;
-       
+        label_map.clear();
+        
         std::vector<unsigned char> nonce;
         nonce.resize(crypto_secretbox_NONCEBYTES);
         randombytes_buf(nonce.data(), nonce.size());

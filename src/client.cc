@@ -164,21 +164,14 @@ void send_msg()
 void retrieve_msg()
 {
 	//TODO get label mapping
-	auto label_map = client.rpc_client->call("get_label_mapping").as<std::vector<std::tuple<std::string, int>>>();
-	int ele_index = -1;
+	auto label_map = client.client->call("get_label_mapping").as<std::map<std::string, int>>();
+    int ele_index = -1;
+
 	
 	//TODO get index from label mapping
-	for(auto tup : label_map)
-	{
-		string label = get<0>(tup);
-		//cout << "label is " << label << " and index is " <<  get<1>(tup) << "\n";
+	if (label_map.find(cur_round.get_label_r()) != label_map.end())
 		//TODO for self testing...change to label_r once pir setup successfully
-		if(!label.compare(cur_round.get_label_s()))
-		{
-			ele_index = get<1>(tup);
-			break;
-		}
-	}
+        ele_index = label_map[cur_round.get_label_r()];
 	
 	cout << "Index is " << ele_index << " and label map size is " << label_map.size() << "\n"; 
 	
