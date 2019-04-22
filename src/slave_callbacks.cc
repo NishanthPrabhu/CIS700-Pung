@@ -15,7 +15,8 @@
 
 std::map<int, client_info> keys_map;
 std::string current_round;
-std::vector<std::tuple<std::string, std::string>> message_store; 
+int available_index = 0;
+auto db(make_unique<uint8_t[]>(number_of_items * size_per_item));
 
 using namespace seal;
 
@@ -73,29 +74,26 @@ std::vector<unsigned char> get_public_key(int client_id) {
 }
 
 int send_index_vote() {
-    int current_index = message_store.size() - 1;
-    return current_index + 1;
+    return available_index;
 }    
 
 void initialize_new_round(std::string round_id) {
     std::cout << "New round alert" << std::endl;
     current_round = round_id;
-    message_store.clear();
+    available_index = 0;
+    db.reset();
+    // TODO check if this is the right thing to do
+    db = make_unique<uint8_t[]>(number_of_items * size_per_item);
 }
 
-void store_message(int index, std::string label, std::string message) {
-    if (message_store.size() <= index) {
-        message_store.resize(index+1);
-    }
-    message_store.at(index) = std::make_tuple(label, message);
+void store_message(int index, std::vector<unsigned char> const& label, std::vector<unsigned char> const& message) {
+    memcpy(&db.get()[index*size_per_item], message.data(), message.size());
+    available_index = index + 1;
 }
 
-void store_and_propagate_message(int index, std::string label, std::string message) {
+void store_and_propagate_message(int index, std::vector<unsigned char> const& label, std::vector<unsigned char> const& message) {
 	bool result;
-    if (message_store.size() <= index) {
-        message_store.resize(index+1);
-    }
-    message_store.at(index) = std::make_tuple(label, message);
+    store_message(index, label, message);
 
 	for (server_info info : slaves) {
 		if (!info.get_server_name().compare(slave_name)) {
@@ -118,6 +116,23 @@ void store_and_propagate_message(int index, std::string label, std::string messa
 }
 
 // This needs PIR, how to integrate?
-std::string retrieve_message() {
-	return "";
+std::string retrieve_message(int client_id, std::vector<std::string> serializedQuery) {
+    // Get galois keys of client from map
+    GaloisKeys* galois_keys = keys_map[client_id].get_galois_keys(); 
+    EncryptionParameters params(scheme_type::BFV);
+    PirParams pir_params;
+    gen_params(number_of_items, size_per_item, N, logt, d, params, pir_params);
+    PIRServer server(params, pir_params);
+    server.set_galois_key(0, *galois_keys);
+
+    // Deserialize the query
+    ssize_t encrypted_count = 2;
+
+    std::vector< std::vector<seal::Ciphertext> > pir_query;
+    for (int i = 0; i < serializedQuery.size(); i++) {
+        std::string cipher = serializedQuery[i];
+        pir_query.push_back(deserialize_ciphertexts(encrypted_count, cipher, CIPHERTEXT_LEN)); 
+    }
+
+    // TODO process query and serialized pirreply to string
 }
