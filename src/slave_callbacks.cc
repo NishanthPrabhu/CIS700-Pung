@@ -15,6 +15,7 @@
 
 std::map<int, client_info> keys_map;
 std::string current_round;
+int available_index = 0;
 auto db(make_unique<uint8_t[]>(number_of_items * size_per_item));
 
 using namespace seal;
@@ -73,24 +74,26 @@ std::vector<unsigned char> get_public_key(int client_id) {
 }
 
 int send_index_vote() {
-    return -1;
+    return available_index;
 }    
 
 void initialize_new_round(std::string round_id) {
     std::cout << "New round alert" << std::endl;
     current_round = round_id;
+    available_index = 0;
     db.reset();
     // TODO check if this is the right thing to do
     db = make_unique<uint8_t[]>(number_of_items * size_per_item);
 }
 
 void store_message(int index, std::vector<unsigned char> const& label, std::vector<unsigned char> const& message) {
-    // TODO store message at index
+    memcpy(&db.get()[index*size_per_item], message.data(), message.size());
+    available_index = index + 1;
 }
 
 void store_and_propagate_message(int index, std::vector<unsigned char> const& label, std::vector<unsigned char> const& message) {
 	bool result;
-    // TODO store message at index locally
+    store_message(index, label, message);
 
 	for (server_info info : slaves) {
 		if (!info.get_server_name().compare(slave_name)) {
