@@ -163,33 +163,42 @@ void send_msg()
 
 void retrieve_msg()
 {
+	bool label_found = true;
 	//TODO get label mapping
 	auto label_map = client.rpc_client->call("get_label_mapping").as<std::map<std::string, int>>();
     int ele_index = -1;
 
 	
-	//TODO get index from label mapping
-	if (label_map.find(cur_round.get_label_r()) != label_map.end())
-		//TODO for self testing...change to label_r once pir setup successfully
-        ele_index = label_map[cur_round.get_label_r()];
+	//TODO
+	//	- get index from label mapping
+	//	- for self testing...change to label_r once pir setup successfully
+	if (label_map.find(cur_round.get_label_s()) != label_map.end())
+        ele_index = label_map[cur_round.get_label_s()];
 	
 	cout << "Index is " << ele_index << " and label map size is " << label_map.size() << "\n"; 
 	
-	if(ele_index != -1)
+	
+	if(ele_index == -1)
 	{
-		//TODO generate PIR query
-		
-		uint64_t index = client.pir_client->get_fv_index(ele_index, size_per_item);   // index of FV plaintext
-    	uint64_t offset = client.pir_client->get_fv_offset(ele_index, size_per_item); // offset in FV plaintext
-    	
-    	PirQuery query = client.pir_client->generate_query(index);
-    	
-    	//TODO serialize PIR query and send message
-    	
-    	auto s_query = serialize_pir_query(query);
-    	
-    	string response = client.rpc_client->call("retrieve_message", client.get_id(), s_query).as<string>();
-		
+		ele_index = rd() % label_map.size();
+		label_found = false;
+	}
+	
+	//TODO generate PIR query
+	
+	uint64_t index = client.pir_client->get_fv_index(ele_index, size_per_item);   // index of FV plaintext
+	uint64_t offset = client.pir_client->get_fv_offset(ele_index, size_per_item); // offset in FV plaintext
+	
+	PirQuery query = client.pir_client->generate_query(index);
+	
+	//TODO serialize PIR query and send message
+	
+	auto s_query = serialize_pir_query(query);
+	
+	string response = client.rpc_client->call("retrieve_message", client.get_id(), s_query).as<string>();
+	
+	if(label_found)
+	{	
 		//TODO
 		//	- recieve PIR response and decrypt message
 		//	- check these values while deserializing
@@ -214,8 +223,7 @@ void retrieve_msg()
 		int sep = decrypt_msg.find('|');
 		int msg_length = atoi(decrypt_msg.substr(0, 2).c_str());
 		decrypt_msg = decrypt_msg.substr(sep+1, msg_length - (sep+1));
-		cout << "Decrypted is " << decrypt_msg << "****\n";
-
+		cout << "Decrypted is " << decrypt_msg << "\n";
 	}
 }
 

@@ -14,6 +14,7 @@
 
 #include "msg_client.h"
 #include "pir_params.h"
+#include <random>
 
 using namespace::std;
 
@@ -33,6 +34,8 @@ msg_peer peer;
 string message;
 queue<string> msgs;
 round_info cur_round;
+
+random_device rd;
 
 static void init();
 
