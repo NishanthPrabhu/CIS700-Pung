@@ -1,1 +1,0 @@
-/usr/bin/c++     CMakeFiles/sealpir.dir/main.cpp.o CMakeFiles/sealpir.dir/pir.cpp.o CMakeFiles/sealpir.dir/pir_client.cpp.o CMakeFiles/sealpir.dir/pir_server.cpp.o  -o bin/sealpir /usr/local/lib/libseal.a -pthread 
