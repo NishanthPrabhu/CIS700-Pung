@@ -5,7 +5,10 @@
 #include "client_info.h"
 #include <vector>
 
-client_info::client_info(){};
+client_info::client_info()
+{
+	clear_client_info();
+};
 
 client_info::client_info(int client_id, std::string const& client_ip,
                          std::vector<unsigned char> const& publickey, GaloisKeys* galoiskeys) {
@@ -13,6 +16,14 @@ client_info::client_info(int client_id, std::string const& client_ip,
 	this->client_ip = client_ip;
 	this->publickey = publickey;
     this->galoiskeys = galoiskeys;
+}
+
+void client_info::clear_client_info()
+{
+	this->client_id = -1;
+	this->client_ip = "";
+	this->publickey.clear();
+	this->galoiskeys = NULL;
 }
 
 int client_info::get_client_id() {

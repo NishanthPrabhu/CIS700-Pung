@@ -12,8 +12,8 @@
 #include <cstdlib>
 #include <boost/algorithm/string.hpp>
 
-#include "pir_params.h"
 #include "msg_client.h"
+#include "pir_params.h"
 
 using namespace::std;
 
@@ -33,12 +33,6 @@ msg_peer peer;
 string message;
 queue<string> msgs;
 round_info cur_round;
-bool peer_joined = false;
-
-PIRClient *pir_client;
-EncryptionParameters *params;
-PirParams pir_params;
-//GaloisKeys *galois_keys;
 
 static void init();
 
@@ -52,7 +46,9 @@ void initialize_new_round(std::string round_id, vector<unsigned char> nonce);
 
 void create_round_labels();
 
-void send_message();
+void send_dummy_msg();
+
+void send_msg();
 
 void retrieve_msg();
 

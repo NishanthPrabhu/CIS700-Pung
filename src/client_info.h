@@ -23,6 +23,7 @@ public:
 	client_info();
     client_info(int client_id, std::string const& client_ip,
                 std::vector<unsigned char> const& publickey, GaloisKeys* galoiskeys);
+    void clear_client_info();
 	int get_client_id();
 	std::string get_client_ip();
     std::vector<unsigned char> get_public_key();

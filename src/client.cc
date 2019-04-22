@@ -77,15 +77,18 @@ void initialize_new_round(std::string round_id, vector<unsigned char> nonce) {
     cur_round.set_round_id(round_id);
     cur_round.set_nonce(nonce);
     
-    cout << "New round: " << cur_round.get_round_id() << "\nNonce : " << get_hex(nonce.data(), nonce.size()) << std::endl;
+    //cout << "New round: " << cur_round.get_round_id() << "\nNonce : " << get_hex(nonce.data(), nonce.size()) << std::endl;
     
-    if(peer_joined)
+    if(peer.join_status())
     {
     	create_round_labels();
-    	send_message();
-//    	//sleep(5000);
-//    	retrieve_msg();
-    }
+   		send_msg();
+   	}
+    else
+    	send_dummy_msg();
+    
+    //TODO needs to be synced i.e. after all msgs have been recieved by the server	
+    retrieve_msg();
 }
 
 void create_round_labels()
@@ -97,17 +100,32 @@ void create_round_labels()
 	
 	crypto_auth_hmacsha256(hash, (const unsigned char *)s_str.c_str(), s_str.length(), peer.get_key_l().data());
 	cur_round.set_label_s(get_hex(hash, sizeof hash));
-	cout << "label_s : " << cur_round.get_label_s() << "\n";
+	//cout << "label_s : " << cur_round.get_label_s() << "\n";
 	
 	crypto_auth_hmacsha256(hash, (const unsigned char *)r_str.c_str(), r_str.length(), peer.get_key_l().data());
 	cur_round.set_label_r(get_hex(hash, sizeof hash));
-	cout << "label_r : " << cur_round.get_label_r() << "\n";
+	//cout << "label_r : " << cur_round.get_label_r() << "\n";
 	
 }
 
-void send_message()
+void send_dummy_msg()
 {
-	if(!msgs.empty())
+	unsigned char tmp_s_label[crypto_auth_hmacsha256_BYTES/2];
+    randombytes_buf(tmp_s_label, sizeof tmp_s_label);
+    
+    string label = get_hex(tmp_s_label, sizeof tmp_s_label);
+    
+    vector<unsigned char> ciphertext;
+	ciphertext.resize(CIPHERTEXT_LEN);
+	
+	randombytes_buf(ciphertext.data(), ciphertext.size());
+    
+    client.rpc_client->call("store_message", label, ciphertext);
+}
+
+void send_msg()
+{
+	if(!msgs.empty() && peer.join_status())
 	{
 		string message = msgs.front();
 		msgs.pop();
@@ -137,65 +155,54 @@ void send_message()
 							 cur_round.get_nonce().data(),
 							 peer.get_key_e().data());
 		
-		client.client->call("store_message", cur_round.get_label_s(), ciphertext);
+		client.rpc_client->call("store_message", cur_round.get_label_s(), ciphertext);
 	}
 	else
-	{
-		cout << "Sending dummy data\n";
-		
-		unsigned char tmp_s_label[crypto_auth_hmacsha256_BYTES/2];
-        randombytes_buf(tmp_s_label, sizeof tmp_s_label);
-        
-        string label = get_hex(tmp_s_label, sizeof tmp_s_label);
-        
-        vector<unsigned char> ciphertext;
-		ciphertext.resize(CIPHERTEXT_LEN);
-		
-		randombytes_buf(ciphertext.data(), ciphertext.size());
-        
-        client.client->call("store_message", label, ciphertext);
-	}
+		send_dummy_msg();
 }
 
 void retrieve_msg()
 {
 	//TODO get label mapping
-	auto label_map = client.client->call("get_label_mapping").as<std::vector<std::tuple<std::string, int>>>();
+	auto label_map = client.rpc_client->call("get_label_mapping").as<std::vector<std::tuple<std::string, int>>>();
 	int ele_index = -1;
 	
 	//TODO get index from label mapping
 	for(auto tup : label_map)
 	{
 		string label = get<0>(tup);
-		cout << "label is " << label << " and index is " <<  get<1>(tup) << "\n";
-		if(!label.compare(cur_round.get_label_r()))
+		//cout << "label is " << label << " and index is " <<  get<1>(tup) << "\n";
+		//TODO for self testing...change to label_r once pir setup successfully
+		if(!label.compare(cur_round.get_label_s()))
 		{
 			ele_index = get<1>(tup);
 			break;
 		}
 	}
 	
+	cout << "Index is " << ele_index << " and label map size is " << label_map.size() << "\n"; 
+	
 	if(ele_index != -1)
 	{
 		//TODO generate PIR query
 		
-		uint64_t index = pir_client->get_fv_index(ele_index, size_per_item);   // index of FV plaintext
-    	uint64_t offset = pir_client->get_fv_offset(ele_index, size_per_item); // offset in FV plaintext
+		uint64_t index = client.pir_client->get_fv_index(ele_index, size_per_item);   // index of FV plaintext
+    	uint64_t offset = client.pir_client->get_fv_offset(ele_index, size_per_item); // offset in FV plaintext
     	
-    	PirQuery query = pir_client->generate_query(index);
+    	PirQuery query = client.pir_client->generate_query(index);
     	
     	//TODO serialize PIR query and send message
     	
     	auto s_query = serialize_pir_query(query);
     	
-    	string response = client.client->call("retrieve_message", client.get_id(), s_query).as<string>();
+    	string response = client.rpc_client->call("retrieve_message", client.get_id(), s_query).as<string>();
 		
 		//TODO
 		//	- recieve PIR response and decrypt message
 		//	- check these values while deserializing
-		PirReply reply = deserialize_ciphertexts(d, response, CIPHER_SIZE);
+		PirReply reply = deserialize_ciphertexts(NUM_PIR_REPLY_CIPHER, response, CIPHER_SIZE);
 		
-		Plaintext result = pir_client->decode_reply(reply);
+		Plaintext result = client.pir_client->decode_reply(reply);
 		
 		vector<unsigned char> ciphertext(N * logt / 8);
 	    coeffs_to_bytes(logt, result, ciphertext.data(), (N * logt) / 8);
@@ -210,7 +217,11 @@ void retrieve_msg()
 			cout << "WARNING forged message recieved...\n";
 		}
 		
-		cout << "Decrypted is " << string((const char *)decrypted, MESSAGE_LEN) << "\n";
+		string decrypt_msg = string((const char *)decrypted);
+		int sep = decrypt_msg.find('|');
+		int msg_length = atoi(decrypt_msg.substr(0, 2).c_str());
+		decrypt_msg = decrypt_msg.substr(sep+1, msg_length - (sep+1));
+		cout << "Decrypted is " << decrypt_msg << "****\n";
 
 	}
 }
@@ -228,19 +239,25 @@ void initialize_client(int id, string master_ip, int master_port)
     cout << "Private key: ";
     cout << get_hex(client.get_private_key().data(), client.get_private_key().size()) << "\n";
     
+    
+    //Set up rpc_client
     rpc::client *rpc_client = new rpc::client(master_ip, master_port);
     string ip = getIPAddress() + ":" + std::to_string(RECEIVE_PORT+id);
     std::cout << ip << std::endl;
 
     // Set up for PIR
+    
+    EncryptionParameters params(scheme_type::BFV);
+    PirParams pir_params;
+    gen_params(number_of_items, size_per_item, N, logt, d, params, pir_params);
 
-    params = new EncryptionParameters(scheme_type::BFV);
-    gen_params(number_of_items, size_per_item, N, logt, d, *params, pir_params);
-    pir_client = new PIRClient(*params, pir_params);
-    //*galois_keys = pir_client->generate_galois_keys();
+    PIRClient *pir_client = new PIRClient(params, pir_params);
+    
     GaloisKeys galois_keys = pir_client->generate_galois_keys();
+    
     register_client(rpc_client, id, ip, serialize_galoiskeys(galois_keys)); 
-    client.init_msg_client(id, ip, rpc_client, master_ip, master_port);
+    
+    client.init_msg_client(id, ip, rpc_client, pir_client, master_ip, master_port);
     
 //    cout << "___________________________________________\n";
 //    cout << "Trying PIR Query counts\n";
@@ -277,7 +294,7 @@ void initialize_client(int id, string master_ip, int master_port)
 
 bool create_comm_keys(int peer_id)
 {
-	auto key = client.client->call("get_client_key", peer_id).as<vector<unsigned char>>();
+	auto key = client.rpc_client->call("get_client_key", peer_id).as<vector<unsigned char>>();
 	
 	if(key.size() == 0)
 	{
@@ -286,17 +303,7 @@ bool create_comm_keys(int peer_id)
 	}
 	
 	cout << "Peer public key is " << get_hex(key.data(), crypto_kx_PUBLICKEYBYTES) << "\n";
-	
-//	unsigned char peer_public[crypto_kx_PUBLICKEYBYTES];
-//	
-//	if (sodium_hex2bin(peer_public, crypto_kx_PUBLICKEYBYTES, key.c_str(), key.length(), NULL, NULL, NULL) == -1)
-//	{
-//		cout << "Aborting. Peer public key corrupt\n";
-//        return false;
-//    }	
-    
-//    unsigned char rx[crypto_kx_SESSIONKEYBYTES], tx[crypto_kx_SESSIONKEYBYTES];
-    
+	    
     int key_res;
     if(client.get_id() < peer_id)
     	key_res = crypto_kx_server_session_keys(peer.get_key_l().data(), peer.get_key_e().data(), 
@@ -318,13 +325,10 @@ bool create_comm_keys(int peer_id)
     	return false;
     }
 	
-	peer.set_peer_info(client_info(peer_id, "", key, NULL));
-	//peer.set_comm_keys(rx, tx);
-	
 	cout << "Key_e : " << get_hex(peer.get_key_l().data(), crypto_kx_SESSIONKEYBYTES) << "\n";
     cout << "Key_l : " << get_hex(peer.get_key_e().data(), crypto_kx_SESSIONKEYBYTES) << "\n";
     
-    peer_joined = true;
+	peer.set_peer_info(client_info(peer_id, "", key, NULL));
     
     return true;
 	
@@ -366,18 +370,24 @@ void add_to_msgqueue()
 	message = "";
 }
 
+void remove_peer()
+{
+	peer.clear_peer_info();
+}
+
 void destroy_keys_and_data()
 {
+	peer.clear_peer_info();
+	client.clear_client();
 }
 
 int main(int argc, char **argv) {
+
 	if(argc < 4)
 	{
 		cout << "Usage: ./client [client_id] [master_ip] [master_port]\n";
 		return 0;
 	}
-	
-	cout << "Nonce size is " <<crypto_secretbox_NONCEBYTES << "\n";
 	
 	init();
 			
@@ -410,7 +420,8 @@ int main(int argc, char **argv) {
 								add_to_msgqueue();
 								break;
 								
-			case QUIT_CHAT: 	break;
+			case QUIT_CHAT: 	remove_peer();
+								break;
 			
 			case QUIT_CLIENT: 	cout << "Destroying all private information\n";
 								destroy_keys_and_data();
@@ -425,6 +436,4 @@ int main(int argc, char **argv) {
 	
 	return 0;
 }
-
-
 

@@ -2,11 +2,10 @@
 // Created by Nishanth Prabhu on 27/03/19.
 //
 
-#include <string>
-
 #ifndef CIS700_PUNG_SERVER_INFO_H
 #define CIS700_PUNG_SERVER_INFO_H
 
+#include <string>
 
 class server_info {
 

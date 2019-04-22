@@ -6,19 +6,23 @@
 
 msg_client::msg_client()
 {
+	rpc_client = NULL;
+	pir_client = NULL;
 	public_key.resize(crypto_kx_PUBLICKEYBYTES);
 	private_key.resize(crypto_kx_SECRETKEYBYTES);
 }
 
 void msg_client::init_msg_client(int id,
 						   string ip,
-						   rpc::client *client,
+						   rpc::client *r_client,
+						   PIRClient *p_client,
 						   string master_ip,
 						   int master_port) {
 
 	this->id = id;   
 	this->ip = ip;
-	this->client = client;
+	this->rpc_client = r_client;
+	this->pir_client = p_client;
 	this->master_ip = master_ip;
 	this->master_port = master_port;
 }
@@ -47,21 +51,41 @@ vector<unsigned char>& msg_client::get_private_key() {
     return private_key;
 }
 
+void msg_client::clear_client()
+{
+	sodium_memzero(public_key.data(), public_key.size());
+	sodium_memzero(private_key.data(), private_key.size());
+	
+	if(rpc_client != NULL)
+		delete rpc_client;
+	
+	if(pir_client != NULL)
+		delete pir_client;
+}
+
 msg_peer::msg_peer()
 {
+	peer_joined = false;
 	key_l.resize(crypto_kx_SESSIONKEYBYTES);
 	key_e.resize(crypto_kx_SESSIONKEYBYTES);
 }
 void msg_peer::set_peer_info(client_info info) {
     this->peer = info;
+    peer_joined = true;
 }
 
-//void msg_peer::set_comm_keys(const unsigned char* recieve_key,
-//                              const unsigned char* transmit_key) {
+void msg_peer::clear_peer_info()
+{
+	this->peer.clear_client_info();
+	peer_joined = false;
+	sodium_memzero(key_l.data(), key_l.size());
+	sodium_memzero(key_e.data(), key_e.size());
+}
 
-//    memcpy(this->key_l, recieve_key, crypto_kx_SESSIONKEYBYTES);
-//	memcpy(this->key_e, transmit_key, crypto_kx_SESSIONKEYBYTES);
-//}
+bool msg_peer::join_status()
+{
+	return peer_joined;
+}
 
 vector<unsigned char>& msg_peer::get_key_l() {
     return key_l;
@@ -80,6 +104,8 @@ int msg_peer::get_peer_id()
 void round_info::set_round_id(string id)
 {
 	round_id = id;
+	label_s.clear();
+	label_r.clear();
 }
 
 string round_info::get_round_id()

@@ -11,6 +11,8 @@ if(Boost_FOUND)
     include_directories(${Boost_INCLUDE_DIRS})
 endif()
 
+find_package(SEAL 3.2.0 EXACT REQUIRED)
+
 set(CMAKE_BUILD_TYPE Debug)
 
 set(rpclib_LIBRARIES "/home/tilak/study/sem4/700(Privacy)/pung_libs/rpclib/build/librpc.a")
@@ -27,24 +29,29 @@ set(SLAVE_SOURCE_FILES src/client_info.cc src/client_info.h src/slave_server.cc 
 
 set(CLIENT_SOURCE_FILES src/client_info.cc src/client_info.h src/msg_client.cc src/msg_client.h src/client.cc src/client.h)
 
-add_executable(master_server ${MASTER_SOURCE_FILES})
+file(GLOB seal_src
+    "src/SealPIR/*.cpp"
+    "src/SealPIR/*.hpp"
+)
 
-add_executable(slave_server ${SLAVE_SOURCE_FILES})
+add_executable(master_server ${MASTER_SOURCE_FILES} ${seal_src})
 
-add_executable(client ${CLIENT_SOURCE_FILES})
+add_executable(slave_server ${SLAVE_SOURCE_FILES} ${seal_src})
+
+add_executable(client ${CLIENT_SOURCE_FILES} ${seal_src})
 
 add_executable(test_master src/test_master.cc)
 
 if(Boost_FOUND)
-    target_link_libraries(master_server ${Boost_LIBRARIES} ${rpclib_LIBRARIES} pthread)
+    target_link_libraries(master_server ${Boost_LIBRARIES} ${rpclib_LIBRARIES} ${sodium_LIBRARIES} SEAL::seal pthread)
 endif()
 
 if(Boost_FOUND)
-    target_link_libraries(slave_server ${Boost_LIBRARIES}  ${rpclib_LIBRARIES} pthread)
+    target_link_libraries(slave_server ${Boost_LIBRARIES}  ${rpclib_LIBRARIES} SEAL::seal pthread)
 endif()
 
 if(Boost_FOUND)
-    target_link_libraries(client ${Boost_LIBRARIES}  ${rpclib_LIBRARIES} ${sodium_LIBRARIES} pthread)
+    target_link_libraries(client ${Boost_LIBRARIES}  ${rpclib_LIBRARIES} ${sodium_LIBRARIES} SEAL::seal pthread)
 endif()
 
 if(Boost_FOUND)

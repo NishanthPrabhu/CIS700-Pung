@@ -102,5 +102,10 @@ void store_client_message(std::string label, std::vector<unsigned char>const& me
 // This needs PIR, how to integrate?
 std::string retrieve_message(int client_id, std::vector<std::string> serializedQuery)
 {
-  	return "";
+	int slave_index = get_slave_index();
+	std::string slave_ip = slaves[slave_index].get_server_ip();
+    boost::trim(slave_ip);
+    int port = slaves[slave_index].get_port();
+    rpc::client client(slave_ip, port);
+	return client.call("retrieve_client_message", client_id, serializedQuery).as<std::string>();
 }
