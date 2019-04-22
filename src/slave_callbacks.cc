@@ -127,16 +127,8 @@ std::string retrieve_message(int client_id, std::vector<std::string> serializedQ
     server.set_database(move(db), number_of_items, size_per_item);
     server.preprocess_database();
 
-    // Deserialize the query
-    ssize_t encrypted_count = 2;
-
-    std::vector< std::vector<seal::Ciphertext> > pir_query;
-    for (int i = 0; i < serializedQuery.size(); i++) {
-        std::string cipher = serializedQuery[i];
-        pir_query.push_back(deserialize_ciphertexts(encrypted_count, cipher, cipher.size())); 
-    }
-
-    PirReply reply = server.generate_reply(pir_query, client_id);
+    PirQuery query = deseralize_pir_query(serializedQuery);
+    PirReply reply = server.generate_reply(query, client_id);
     std::string serialized_reply = serialize_ciphertexts(reply);
     return serialized_reply;
 }
