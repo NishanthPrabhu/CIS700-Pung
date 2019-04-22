@@ -101,13 +101,12 @@ void create_round_labels()
 	
 	crypto_auth_hmacsha256(hash, (const unsigned char *)r_str.c_str(), r_str.length(), peer.get_key_l().data());
 	cur_round.set_label_r(get_hex(hash, sizeof hash));
-	cout << "label_r : " << cur_round.get_label_r() << "\n";;
+	cout << "label_r : " << cur_round.get_label_r() << "\n";
 	
 }
 
 void send_message()
 {
-	//TODO send dummy message
 	if(!msgs.empty())
 	{
 		string message = msgs.front();
@@ -132,79 +131,93 @@ void send_message()
 		
 		ciphertext.resize(CIPHERTEXT_LEN);
 	
-//		unsigned char nonce[crypto_secretbox_NONCEBYTES];
-//		randombytes_buf(nonce, sizeof nonce);
 		crypto_secretbox_easy(ciphertext.data(),
 							 (const unsigned char*)message.c_str(),
 							 message.length(),
 							 cur_round.get_nonce().data(),
 							 peer.get_key_e().data());
 		
-		//string ciphertext_s = get_hex(ciphertext, CIPHERTEXT_LEN);
-	
-		//cout << "Ciphertext is : " << ciphertext_s << "\n";
+		client.client->call("store_message", cur_round.get_label_s(), ciphertext);
+	}
+	else
+	{
+		cout << "Sending dummy data\n";
 		
-		//client.client->call("store_message", cur_round.get_label_s(), ciphertext_s);
+		unsigned char tmp_s_label[crypto_auth_hmacsha256_BYTES/2];
+        randombytes_buf(tmp_s_label, sizeof tmp_s_label);
+        
+        string label = get_hex(tmp_s_label, sizeof tmp_s_label);
+        
+        vector<unsigned char> ciphertext;
+		ciphertext.resize(CIPHERTEXT_LEN);
 		
-		
-		//TODO move lower part when retrieving messages
-		
-//		if (sodium_hex2bin(ciphertext, CIPHERTEXT_LEN, ciphertext_s.c_str(), ciphertext_s.length(), NULL, NULL, NULL) == -1)
-//		{
-//			cout << "Aborting. Peer public key corrupt\n";
-//		    //return false;
-//		}
-
-//		unsigned char decrypted[MESSAGE_LEN];
-//		if (crypto_secretbox_open_easy(decrypted, ciphertext, CIPHERTEXT_LEN, NONCE, peer.get_key_e()) != 0) {
-//			/* message forged! */
-//		}
-//		
-//		cout << "Decrypted is " << string((const char *)decrypted, MESSAGE_LEN) << "\n";		
+		randombytes_buf(ciphertext.data(), ciphertext.size());
+        
+        client.client->call("store_message", label, ciphertext);
 	}
 }
 
 void retrieve_msg()
 {
 	//TODO get label mapping
-//	auto label_map = client.client->call("get_label_mapping").as<mapping>().label_map;
-//	int index;
-//	
-//	//TODO get index from label mapping
-//	for(auto tup : label_map)
-//	{
-//		string label = get<0>(tup);
-//		cout << "label is " << label << " and index is " <<  get<1>(tup) << "\n";
-//		if(!label.compare(cur_round.get_label_r()))
-//		{
-//			index = get<1>(tup);
-//			break;
-//		}
-//	}
-//	
-//	//TODO get msg using PIR
-//	
-//	
-//	//DONE decrypting message
-//	string ciphertext_s; //some retrieved message from server for given label
-//	unsigned char ciphertext[CIPHERTEXT_LEN];
-//	unsigned char decrypted[MESSAGE_LEN];
-//	
-//	if (sodium_hex2bin(ciphertext, CIPHERTEXT_LEN, ciphertext_s.c_str(), ciphertext_s.length(), NULL, NULL, NULL) == -1)
-//	{
-//		cout << "Aborting. Peer message corrupt\n";
-//	    //return false;
-//	}
-//	
-//	//TODO remove remove constant nonce and get from server each round
-//	//	unsigned char nonce[crypto_secretbox_NONCEBYTES];
-//	//	randombytes_buf(nonce, sizeof nonce);
-//	
-//	if (crypto_secretbox_open_easy(decrypted, ciphertext, CIPHERTEXT_LEN, NONCE, peer.get_key_e()) != 0) {
-//		/* message forged! */
-//	}
-//	
-//	cout << "Decrypted is " << string((const char *)decrypted, MESSAGE_LEN) << "\n";
+	auto label_map = client.client->call("get_label_mapping").as<std::vector<std::tuple<std::string, int>>>();
+	int ele_index = -1;
+	
+	//TODO get index from label mapping
+	for(auto tup : label_map)
+	{
+		string label = get<0>(tup);
+		cout << "label is " << label << " and index is " <<  get<1>(tup) << "\n";
+		if(!label.compare(cur_round.get_label_r()))
+		{
+			ele_index = get<1>(tup);
+			break;
+		}
+	}
+	
+	if(ele_index != -1)
+	{
+		//TODO generate PIR query
+		
+		uint64_t index = pir_client->get_fv_index(ele_index, size_per_item);   // index of FV plaintext
+    	uint64_t offset = pir_client->get_fv_offset(ele_index, size_per_item); // offset in FV plaintext
+    	
+    	PirQuery query = pir_client->generate_query(index);
+    	
+    	//TODO serialize PIR query and send message
+    	
+    	auto s_query = seralize_pir_query(query);
+    	
+    	string response = client.client->call("retrieve_message", client.get_id(), s_query).as<string>();
+		
+		//TODO recieve PIR response and decrypt message
+		
+		PirReply reply = deserialize_ciphertexts(d, response, CIPHER_SIZE);
+		
+		Plaintext result = pir_client->decode_reply(reply);
+		
+		//	//DONE decrypting message
+		//	string ciphertext_s; //some retrieved message from server for given label
+		//	unsigned char ciphertext[CIPHERTEXT_LEN];
+		//	unsigned char decrypted[MESSAGE_LEN];
+		//	
+		//	if (sodium_hex2bin(ciphertext, CIPHERTEXT_LEN, ciphertext_s.c_str(), ciphertext_s.length(), NULL, NULL, NULL) == -1)
+		//	{
+		//		cout << "Aborting. Peer message corrupt\n";
+		//	    //return false;
+		//	}
+		//	
+		//	//TODO remove remove constant nonce and get from server each round
+		//	//	unsigned char nonce[crypto_secretbox_NONCEBYTES];
+		//	//	randombytes_buf(nonce, sizeof nonce);
+		//	
+		//	if (crypto_secretbox_open_easy(decrypted, ciphertext, CIPHERTEXT_LEN, NONCE, peer.get_key_e()) != 0) {
+		//		/* message forged! */
+		//	}
+		//	
+		//	cout << "Decrypted is " << string((const char *)decrypted, MESSAGE_LEN) << "\n";
+
+	}
 }
 
 void initialize_client(int id, string master_ip, int master_port)
@@ -233,6 +246,31 @@ void initialize_client(int id, string master_ip, int master_port)
     GaloisKeys galois_keys = pir_client->generate_galois_keys();
     register_client(rpc_client, id, ip, serialize_galoiskeys(galois_keys)); 
     client.init_msg_client(id, ip, rpc_client, master_ip, master_port);
+    
+    cout << "___________________________________________\n";
+    cout << "Trying PIR Query counts\n";
+    
+    int ele_index = 3;
+    
+    uint64_t index = pir_client->get_fv_index(ele_index, size_per_item);   // index of FV plaintext
+    uint64_t offset = pir_client->get_fv_offset(ele_index, size_per_item); // offset in FV plaintext
+    	
+    PirQuery query = pir_client->generate_query(index);
+    
+    for(auto v : query)
+    	cout << v.size() << "\n";
+    
+    auto vec = seralize_pir_query(query);
+    
+    for(auto str : vec)
+    	cout << str.length() << "\n";
+    	
+    query = deseralize_pir_query(vec);
+    
+    for(auto v : query)
+    	cout << v.size() << "\n";
+    	
+    cout << "___________________________________________\n";
 
     // Setting up rpc server with async callbacks to process rounds information from server
     rpc::server *srv = new rpc::server(RECEIVE_PORT+id);

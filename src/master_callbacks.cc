@@ -13,8 +13,7 @@
 #include <vector>
 
 std::map<int, std::string> client_address_map;
-
-mapping label_mapping; 
+std::vector<std::tuple<std::string, int>> label_map;
 
 /**
  *
@@ -78,8 +77,8 @@ std::vector<unsigned char> get_client_public_key(int client_id) {
     return result;
 }
 
-mapping get_label_mapping() {
-    return label_mapping;
+std::vector<std::tuple<std::string, int>> get_label_mapping() {
+    return label_map;
 }    
 
 void test_unsigned_char(std::vector<unsigned char> buff) {
@@ -87,20 +86,21 @@ void test_unsigned_char(std::vector<unsigned char> buff) {
     RPCLIB_MSGPACK::packer<RPCLIB_MSGPACK::sbuffer> packer(sbuf);
 }
 
-void store_client_message(std::string label, std::string message) {
+void store_client_message(std::string label, std::vector<unsigned char>const& message) {
   	int slave_index = get_slave_index();
 	std::string slave_ip = slaves[slave_index].get_server_ip();
     boost::trim(slave_ip);
     int port = slaves[slave_index].get_port();
 
     int index = get_label_index();
-    label_mapping.label_map.push_back(std::make_tuple(label, index));	
+    label_map.push_back(std::make_tuple(label, index));	
     std::cout << "Storing label: " << label << " at index: " << index << std::endl;
     rpc::client client(slave_ip, port);
 	client.call("store_and_propagate_message", index, label, message);
 }
 
 // This needs PIR, how to integrate?
-std::string retrieve_client_message() {
+std::string retrieve_message(int client_id, std::vector<std::string> serializedQuery)
+{
   	return "";
 }

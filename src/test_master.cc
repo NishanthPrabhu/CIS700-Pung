@@ -34,9 +34,9 @@ int main() {
     std::cout << "public key received: " << received_key << std::endl;
 
     client.call("store_message", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb");
-    mapping label_mapping = client.call("get_label_mapping").as<mapping>();
-    for (int i=0; i <label_mapping.label_map.size(); i++) {
-        auto labelmap = label_mapping.label_map[i];
+    auto label_map = client.call("get_label_mapping").as<std::vector<std::tuple<std::string, int>>>();
+    for (int i=0; i <label_map.size(); i++) {
+        auto labelmap = label_map[i];
         std::cout << std::get<0>(labelmap) << std::endl;
         std::cout << std::get<1>(labelmap) << std::endl;
     }

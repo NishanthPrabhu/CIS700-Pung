@@ -72,6 +72,11 @@ std::vector<seal::Ciphertext> deserialize_ciphertexts(std::uint32_t count, std::
                                                       std::uint32_t len_ciphertext);
 std::string serialize_ciphertexts(std::vector<seal::Ciphertext> c);
 
+// Helper functions to serialize and deserialize PirQuery (vector<vector<Ciphertext>>)
+std::vector<std::string> seralize_pir_query(PirQuery& query);
+
+PirQuery deseralize_pir_query(std::vector<std::string>& query);
+
 // Serialize and deserialize galois keys to send them over the network
 std::string serialize_galoiskeys(seal::GaloisKeys g);
 seal::GaloisKeys *deserialize_galoiskeys(std::string s);

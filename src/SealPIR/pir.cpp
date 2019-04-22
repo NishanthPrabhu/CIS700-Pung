@@ -246,7 +246,9 @@ vector<uint64_t> compute_indices(uint64_t desiredIndex, vector<uint64_t> Nvec) {
 inline Ciphertext deserialize_ciphertext(string s) {
     Ciphertext c;
     std::istringstream input(s);
+    cout << "Here\n";
     c.unsafe_load(input);
+    cout << "Not reached\n";
     return c;
 }
 
@@ -261,6 +263,7 @@ vector<Ciphertext> deserialize_ciphertexts(uint32_t count, string s, uint32_t le
 inline string serialize_ciphertext(Ciphertext c) {
     std::ostringstream output;
     c.save(output);
+    cout << "Returning " <<  output.str().length() << "\n";
     return output.str();
 }
 
@@ -268,8 +271,32 @@ string serialize_ciphertexts(vector<Ciphertext> c) {
     string s;
     for (uint32_t i = 0; i < c.size(); i++) {
         s.append(serialize_ciphertext(c[i]));
+        cout << "After append size is " << s.length() << "\n";
     }
     return s;
+}
+
+std::vector<std::string> seralize_pir_query(PirQuery& query)
+{
+	std::vector<std::string> vec;
+	
+	for(auto cipher : query)
+		vec.push_back(serialize_ciphertexts(cipher));
+		
+	return vec;
+}
+
+#include <iostream>
+
+PirQuery deseralize_pir_query(std::vector<std::string>& s_query)
+{
+	PirQuery query;
+	for(auto s_cipher : s_query)
+	{
+		std::cout << "String length is " << s_cipher.length() << "\n";
+		query.push_back(deserialize_ciphertexts(2, s_cipher, CIPHER_SIZE));
+	}	
+	return query;
 }
 
 string serialize_galoiskeys(GaloisKeys g) {
