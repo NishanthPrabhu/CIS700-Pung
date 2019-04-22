@@ -15,7 +15,7 @@
 
 std::map<int, client_info> keys_map;
 std::string current_round;
-// TODO message store structure
+auto db(make_unique<uint8_t[]>(number_of_items * size_per_item));
 
 using namespace seal;
 
@@ -79,7 +79,9 @@ int send_index_vote() {
 void initialize_new_round(std::string round_id) {
     std::cout << "New round alert" << std::endl;
     current_round = round_id;
-    // TODO clear message store here
+    db.reset();
+    // TODO check if this is the right thing to do
+    db = make_unique<uint8_t[]>(number_of_items * size_per_item);
 }
 
 void store_message(int index, std::vector<unsigned char> const& label, std::vector<unsigned char> const& message) {

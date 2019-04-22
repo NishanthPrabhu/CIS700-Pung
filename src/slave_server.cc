@@ -46,11 +46,6 @@ server_info* get_slave_server(std::string server_file, std::string server_name) 
 	return info;
 }
 
-/*void initialize_pir() {
-    params = new EncryptionParameters(scheme_type::BFV);
-    gen_params(number_of_items, size_per_item, N, logt, d, *params, pir_params);
-}*/
-
 void start_slave_server(server_info *info) {
 	//initialize_pir();
     int port = info->get_port();
