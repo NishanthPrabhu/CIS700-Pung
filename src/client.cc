@@ -164,7 +164,7 @@ void send_msg()
 void retrieve_msg()
 {
 	//TODO get label mapping
-	auto label_map = client.client->call("get_label_mapping").as<std::map<std::string, int>>();
+	auto label_map = client.rpc_client->call("get_label_mapping").as<std::map<std::string, int>>();
     int ele_index = -1;
 
 	
@@ -409,8 +409,13 @@ int main(int argc, char **argv) {
 								}
 								break;
 								
-			case MSG:			cout << "Adding to msg queue\n";
-								add_to_msgqueue();
+			case MSG:			if(!peer.join_status())
+									cout << "Join a peer first to start communication\n";
+								else
+								{
+									cout << "Adding to msg queue\n";
+									add_to_msgqueue();
+								}
 								break;
 								
 			case QUIT_CHAT: 	remove_peer();

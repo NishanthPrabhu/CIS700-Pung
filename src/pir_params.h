@@ -6,8 +6,6 @@
 #define CIS700_PUNG_PIR_PARAMS_H
 
 #include "SealPIR/pir.hpp"
-#include "SealPIR/pir_client.hpp"
-#include "SealPIR/pir_server.hpp"
 #include <seal/seal.h>
 #include <sodium.h>
 
