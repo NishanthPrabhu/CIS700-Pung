@@ -13,17 +13,9 @@
 #include "rpc/rpc_error.h"
 #include "master_server.h"
 #include <sodium.h>
-//#include "SealPIR/pir.hpp"
 #include <boost/algorithm/string.hpp>
 
-//using namespace seal;
-
 std::vector<server_info> slaves;
-uint64_t number_of_items = 1 << 12;
-uint64_t size_per_item = 288;
-uint32_t N = 2048;
-uint32_t logt = 12;
-uint32_t d = 5;
 
 server_info* get_master_server(std::string server_file) {
 	std::ifstream filereader(server_file);

@@ -5,26 +5,10 @@
 #include "server_info.h"
 #include "slave_callbacks.h"
 #include "rpc/server.h"
-#include "slave_server.h"
-//#include "SealPIR/pir.hpp"
-//#include "SealPIR/pir_client.hpp"
-//#include "SealPIR/pir_server.hpp"
-//#include <seal/seal.h>
 #include <boost/algorithm/string.hpp>
-
-//using namespace seal;
 
 std::vector<server_info> slaves;
 std::string slave_name;
-
-uint64_t number_of_items = 1 << 12;
-uint64_t size_per_item = 288;
-uint32_t N = 2048;
-uint32_t logt = 12;
-uint32_t d = 3;
-
-//EncryptionParameters *params;
-//PirParams pir_params;
 
 server_info* get_slave_server(std::string server_file, std::string server_name) {
 	std::ifstream filereader(server_file);
