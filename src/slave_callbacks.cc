@@ -136,9 +136,7 @@ std::string retrieve_message(int client_id, std::vector<std::string> serializedQ
         pir_query.push_back(deserialize_ciphertexts(encrypted_count, cipher, cipher.size())); 
     }
 
-    PIRClient client(params, pir_params); // Dummy client object - generate reply requires 3 args, but 3rd
-                                          // one is unused
-    PirReply reply = server.generate_reply(pir_query, client_id, client);
+    PirReply reply = server.generate_reply(pir_query, client_id);
     std::string serialized_reply = serialize_ciphertexts(reply);
     return serialized_reply;
 }

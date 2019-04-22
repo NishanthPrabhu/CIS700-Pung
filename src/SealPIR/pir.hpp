@@ -73,7 +73,7 @@ std::vector<seal::Ciphertext> deserialize_ciphertexts(std::uint32_t count, std::
 std::string serialize_ciphertexts(std::vector<seal::Ciphertext> c);
 
 // Helper functions to serialize and deserialize PirQuery (vector<vector<Ciphertext>>)
-std::vector<std::string> seralize_pir_query(PirQuery& query);
+std::vector<std::string> serialize_pir_query(PirQuery& query);
 
 PirQuery deseralize_pir_query(std::vector<std::string>& query);
 

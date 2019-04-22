@@ -263,7 +263,6 @@ vector<Ciphertext> deserialize_ciphertexts(uint32_t count, string s, uint32_t le
 inline string serialize_ciphertext(Ciphertext c) {
     std::ostringstream output;
     c.save(output);
-    cout << "Returning " <<  output.str().length() << "\n";
     return output.str();
 }
 
@@ -271,12 +270,11 @@ string serialize_ciphertexts(vector<Ciphertext> c) {
     string s;
     for (uint32_t i = 0; i < c.size(); i++) {
         s.append(serialize_ciphertext(c[i]));
-        cout << "After append size is " << s.length() << "\n";
     }
     return s;
 }
 
-std::vector<std::string> seralize_pir_query(PirQuery& query)
+std::vector<std::string> serialize_pir_query(PirQuery& query)
 {
 	std::vector<std::string> vec;
 	
@@ -286,16 +284,12 @@ std::vector<std::string> seralize_pir_query(PirQuery& query)
 	return vec;
 }
 
-#include <iostream>
-
 PirQuery deseralize_pir_query(std::vector<std::string>& s_query)
 {
 	PirQuery query;
 	for(auto s_cipher : s_query)
-	{
-		std::cout << "String length is " << s_cipher.length() << "\n";
-		query.push_back(deserialize_ciphertexts(2, s_cipher, CIPHER_SIZE));
-	}	
+		query.push_back(deserialize_ciphertexts(1, s_cipher, CIPHER_SIZE));
+	
 	return query;
 }
 
