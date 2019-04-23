@@ -72,23 +72,33 @@ void register_client(rpc::client *rpcclient, int id, string ip, string galois_ke
 	rpcclient->call("set_client_key", id, ip, client.get_public_key(), galois_keys);
 }
 
-void initialize_new_round(std::string round_id, vector<unsigned char> nonce) {
+void init_new_round(std::string round_id, vector<unsigned char> nonce) {
 
     cur_round.set_round_id(round_id);
     cur_round.set_nonce(nonce);
     
     //cout << "New round: " << cur_round.get_round_id() << "\nNonce : " << get_hex(nonce.data(), nonce.size()) << std::endl;
     
-    if(peer.join_status())
+    std::thread thread(&start_send_msg);
+    
+    return;
+}
+
+void init_msg_retrieval()
+{
+	std::thread thread(&retrieve_msg);
+	return;
+}
+
+void start_send_msg()
+{
+	if(peer.join_status())
     {
     	create_round_labels();
    		send_msg();
    	}
     else
     	send_dummy_msg();
-    
-    //TODO needs to be synced i.e. after all msgs have been recieved by the server	
-    retrieve_msg();
 }
 
 void create_round_labels()
@@ -181,8 +191,13 @@ void retrieve_msg()
 	
 	if(ele_index == -1)
 	{
-		ele_index = rd() % label_map.size();
-		label_found = false;
+		if(label_map.size() != 0)
+		{
+			ele_index = rd() % label_map.size();
+			label_found = false;
+		}
+		else
+			return;
 	}
 	
 	//TODO generate PIR query
@@ -226,6 +241,8 @@ void retrieve_msg()
 		decrypt_msg = decrypt_msg.substr(sep+1, msg_length - (sep+1));
 		cout << "Decrypted is " << decrypt_msg << "\n";
 	}
+	
+	cout << "Done retrieving\n";
 }
 
 void initialize_client(int id, string master_ip, int master_port)
@@ -288,7 +305,8 @@ void initialize_client(int id, string master_ip, int master_port)
 
     // Setting up rpc server with async callbacks to process rounds information from server
     rpc::server *srv = new rpc::server(RECEIVE_PORT+id);
-    srv->bind("rounds_notice", &initialize_new_round);
+    srv->bind("rounds_notice", &init_new_round);
+    srv->bind("retrieve_notice", &init_msg_retrieval);
     srv->async_run(2);
     
     cout << "____________________________________________\n";

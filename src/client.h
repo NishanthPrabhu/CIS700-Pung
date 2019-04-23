@@ -45,7 +45,11 @@ string getIPAddress();
 
 void register_client(rpc::client *, int, string, unsigned char*);
 
-void initialize_new_round(std::string round_id, vector<unsigned char> nonce);
+void init_new_round(std::string round_id, vector<unsigned char> nonce);
+
+void init_msg_retrieval();
+
+void start_send_msg();
 
 void create_round_labels();
 

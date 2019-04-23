@@ -133,12 +133,12 @@ void round_master(int round_length) {
         nonce.resize(crypto_secretbox_NONCEBYTES);
         randombytes_buf(nonce.data(), nonce.size());
 
-        send_rounds_notice_clients(round_number, nonce);
+        label_map.clear();
 
         // Tell the slaves first, so that they can clear state.
         send_rounds_notice_slaves(round_number);
-
-        label_map.clear();
+        
+        send_rounds_notice_clients(round_number, nonce);
 
         std::this_thread::sleep_for(std::chrono::milliseconds(round_length));
     }    
