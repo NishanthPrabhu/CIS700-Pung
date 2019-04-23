@@ -55,7 +55,7 @@ void PIRServer::set_database(unique_ptr<vector<Plaintext>> &&db) {
     is_db_preprocessed_ = false;
 }
 
-void PIRServer::set_database(const std::unique_ptr<const std::uint8_t[]> &bytes, 
+void PIRServer::set_database(std::unique_ptr<std::uint8_t[]> &bytes, 
     uint64_t ele_num, uint64_t ele_size) {
 
     uint32_t logt = floor(log2(params_.plain_modulus().value()));

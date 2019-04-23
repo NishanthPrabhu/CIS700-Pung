@@ -143,7 +143,7 @@ void initialize_pir() {
 std::string retrieve_message(int client_id, std::vector<std::string> serializedQuery) {
     // Get galois keys of client from map
     GaloisKeys* galois_keys = keys_map[client_id].get_galois_keys(); 
-    server->set_database(move(db), number_of_items, size_per_item);
+    server->set_database(db, number_of_items, size_per_item);
     server->preprocess_database();
     server->set_galois_key(client_id, *galois_keys);
 

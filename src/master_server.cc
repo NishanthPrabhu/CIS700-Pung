@@ -128,17 +128,17 @@ void round_master(int round_length) {
 
     while (true) {
         round_number += 1;
-        label_map.clear();
         
         std::vector<unsigned char> nonce;
         nonce.resize(crypto_secretbox_NONCEBYTES);
         randombytes_buf(nonce.data(), nonce.size());
 
+        send_rounds_notice_clients(round_number, nonce);
+
         // Tell the slaves first, so that they can clear state.
         send_rounds_notice_slaves(round_number);
 
-        // Tell all clients (So master needs to maintain a list of clients and their information)
-        send_rounds_notice_clients(round_number, nonce);
+        label_map.clear();
 
         std::this_thread::sleep_for(std::chrono::milliseconds(round_length));
     }    
@@ -163,9 +163,9 @@ void start_master_server(server_info *info) {
 	srv.bind("retrieve_message", &retrieve_message); // Client retrieves message
     srv.bind("get_label_mapping", &get_label_mapping);
     srv.bind("test_unsigned_char", &test_unsigned_char);
-    srv.run();
-    //srv.async_run(3);
-    //std::cin.ignore();
+    //srv.run();
+    srv.async_run(3);
+    std::cin.ignore();
 }
 
 int main(int argc, char **argv) {

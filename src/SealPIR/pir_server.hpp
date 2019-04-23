@@ -16,7 +16,7 @@ class PIRServer {
     // NOTE: server takes over ownership of db and frees it when it exits.
     // Caller cannot free db
     void set_database(std::unique_ptr<std::vector<seal::Plaintext>> &&db);
-    void set_database(const std::unique_ptr<const std::uint8_t[]> &bytes, std::uint64_t ele_num, std::uint64_t ele_size);
+    void set_database(std::unique_ptr<std::uint8_t[]> &bytes, std::uint64_t ele_num, std::uint64_t ele_size);
     void preprocess_database();
 
     std::vector<seal::Ciphertext> expand_query(
