@@ -5,9 +5,9 @@
 #ifndef CIS700_PUNG_SLAVE_CALLBACKS_H
 #define CIS700_PUNG_SLAVE_CALLBACKS_H
 
-#define LIBSODIUM_PUBLICKEY_LENGTH 32
-
 #include<vector>
+
+#define LIBSODIUM_PUBLICKEY_LENGTH 32
 
 void initialize_new_round(std::string round_id);
 void set_client_public_key(int client_id, std::string const& client_ip,

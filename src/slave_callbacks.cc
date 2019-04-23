@@ -11,6 +11,7 @@
 #include "rpc/client.h"
 #include "rpc/rpc_error.h"
 #include "SealPIR/pir.hpp"
+#include "SealPIR/pir_server.hpp"
 #include <boost/algorithm/string.hpp>
 
 std::map<int, client_info> keys_map;

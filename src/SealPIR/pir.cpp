@@ -246,9 +246,7 @@ vector<uint64_t> compute_indices(uint64_t desiredIndex, vector<uint64_t> Nvec) {
 inline Ciphertext deserialize_ciphertext(string s) {
     Ciphertext c;
     std::istringstream input(s);
-    cout << "Here\n";
     c.unsafe_load(input);
-    cout << "Not reached\n";
     return c;
 }
 

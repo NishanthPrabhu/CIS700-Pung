@@ -5,16 +5,15 @@
 #ifndef CIS700_PUNG_PIR_PARAMS_H
 #define CIS700_PUNG_PIR_PARAMS_H
 
-#define MESSAGE_LEN 256
-#define CIPHERTEXT_LEN (crypto_secretbox_MACBYTES + MESSAGE_LEN)
-
 #include "SealPIR/pir.hpp"
-#include "SealPIR/pir_client.hpp"
-#include "SealPIR/pir_server.hpp"
 #include <seal/seal.h>
 #include <sodium.h>
 
 using namespace seal;
+
+#define MESSAGE_LEN 256
+#define CIPHERTEXT_LEN (crypto_secretbox_MACBYTES + MESSAGE_LEN)
+#define NUM_PIR_REPLY_CIPHER 10
 
 uint64_t number_of_items = 1 << 12;
 uint64_t size_per_item = CIPHERTEXT_LEN;

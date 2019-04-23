@@ -1,13 +1,14 @@
 //
 // Created by Nishanth Prabhu on 28/03/19.
 //
-#include <map>
-#include "rpc/msgpack.hpp"
 
 #ifndef CIS700_PUNG_MASTER_CALLBACKS_H
 #define CIS700_PUNG_MASTER_CALLBACKS_H
 
 #define LIBSODIUM_PUBLICKEY_LENGTH 32
+
+#include <map>
+#include "rpc/msgpack.hpp"
 
 extern std::map<int, std::string> client_address_map;
 //extern std::vector<std::tuple<std::string, int>> label_map;
