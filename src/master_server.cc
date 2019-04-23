@@ -50,7 +50,7 @@ server_info* get_master_server(std::string server_file) {
 	return info;
 }
 
-void send_rounds_notice_clients(int round_number, std::vector<unsigned char> nonce) {
+void send_rounds_notice_clients(std::string client_function, int round_number, std::vector<unsigned char> nonce) {
     std::string round_id = "round_" + std::to_string(round_number);
 
     for (auto const& client : client_address_map) {
@@ -67,7 +67,13 @@ void send_rounds_notice_clients(int round_number, std::vector<unsigned char> non
         try {
             const uint64_t short_timeout = 1000;
             rpcclient.set_timeout(short_timeout);
-            rpcclient.call("rounds_notice", round_id, nonce);
+            if (client_function == "rounds_notice") {
+                rpcclient.call(client_function, round_id, nonce);
+                std::cout << "Send notice" << std::endl;
+            } else {
+                rpcclient.call(client_function);
+                std::cout << "Retrieve notice" << std::endl;
+            }
         } catch (rpc::timeout &t) {
             std::cout << "Client not responding..skip" << std::endl;
             continue;
@@ -134,13 +140,15 @@ void round_master(int round_length) {
         randombytes_buf(nonce.data(), nonce.size());
 
         label_map.clear();
-
-        // Tell the slaves first, so that they can clear state.
         send_rounds_notice_slaves(round_number);
-        
-        send_rounds_notice_clients(round_number, nonce);
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(round_length));
+        send_rounds_notice_clients("rounds_notice", round_number, nonce);
+        std::cout << "Send notice to clients.." << std::endl;
+        std::cout << "going to sleep.." << std::endl;
+        std::this_thread::sleep_for(std::chrono::milliseconds(round_length/2));
+   
+        std::cout << "Retrieve notice to clients.." << std::endl;
+        send_rounds_notice_clients("retrieve_notice", round_number, nonce);
+        std::this_thread::sleep_for(std::chrono::milliseconds(round_length/2));
     }    
 }    
 
