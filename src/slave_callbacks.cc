@@ -16,14 +16,13 @@
 #include <boost/algorithm/string.hpp>
 
 std::map<int, client_info> keys_map;
-std::string current_round;
+int current_round;
 int available_index = 0;
 std::unique_ptr<uint8_t[]> db;
 
 EncryptionParameters *params;
 PirParams pir_params;
 PIRServer *server;
-bool initialized = false;
 
 using namespace seal;
 
@@ -84,13 +83,13 @@ int send_index_vote() {
     return available_index;
 }    
 
-void initialize_new_round(std::string round_id) {
+void initialize_new_round(int round_number) {
     std::cout << "New round alert" << std::endl;
-    current_round = round_id;
-    available_index = 0;
-    //db.reset();
-    // TODO check if this is the right thing to do
-    //db = make_unique<unsigned char[]>(number_of_items * size_per_item);
+    current_round = round_number;
+    if (current_round % 2 == 1) { 
+        available_index = 0;
+        db = make_unique<unsigned char[]>(number_of_items * size_per_item);
+    }
 }
 
 void store_message(int index, std::vector<unsigned char> const& label, std::vector<unsigned char> const& message) {
@@ -130,16 +129,12 @@ void store_and_propagate_message(int index, std::vector<unsigned char> const& la
     }
 }
 
-
 void initialize_pir() {
     params = new EncryptionParameters(scheme_type::BFV);
     gen_params(number_of_items, size_per_item, N, logt, d, *params, pir_params);
     server = new PIRServer(*params, pir_params); 
-    db = std::make_unique<uint8_t[]>(number_of_items * size_per_item);
 }    
 
-
-// This needs PIR, how to integrate?
 std::string retrieve_message(int client_id, std::vector<std::string> serializedQuery) {
     // Get galois keys of client from map
     GaloisKeys* galois_keys = keys_map[client_id].get_galois_keys(); 

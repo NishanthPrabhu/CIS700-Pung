@@ -115,7 +115,7 @@ void send_rounds_notice_slaves(int round_number) {
         try {
             const uint64_t short_timeout = 1000;
             client.set_timeout(short_timeout);
-            client.call("rounds_notice", round_id);
+            client.call("rounds_notice", round_number);
         } catch (rpc::timeout &t) {
             std::cout << "Slave not responding..skip" << std::endl;
             continue;
