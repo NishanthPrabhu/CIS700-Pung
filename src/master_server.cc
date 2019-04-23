@@ -54,7 +54,6 @@ void send_rounds_notice_clients(int round_number, std::vector<unsigned char> non
     std::string round_id = "round_" + std::to_string(round_number);
 
     for (auto const& client : client_address_map) {
-        std::cout << "There" << std::endl;
         int client_id = client.first;
         std::string client_ip_port = client.second;
         std::vector<std::string> ip_port;
@@ -164,8 +163,9 @@ void start_master_server(server_info *info) {
 	srv.bind("retrieve_message", &retrieve_message); // Client retrieves message
     srv.bind("get_label_mapping", &get_label_mapping);
     srv.bind("test_unsigned_char", &test_unsigned_char);
-    srv.async_run(3);
-    std::cin.ignore();
+    srv.run();
+    //srv.async_run(3);
+    //std::cin.ignore();
 }
 
 int main(int argc, char **argv) {

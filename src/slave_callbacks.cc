@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <tuple>
+#include <memory>
 #include "slave_callbacks.h"
 #include "slave_server.h"
 #include "server_info.h"
@@ -17,7 +18,12 @@
 std::map<int, client_info> keys_map;
 std::string current_round;
 int available_index = 0;
-auto db(make_unique<uint8_t[]>(number_of_items * size_per_item));
+std::unique_ptr<uint8_t[]> db;
+
+EncryptionParameters *params;
+PirParams pir_params;
+PIRServer *server;
+bool initialized = false;
 
 using namespace seal;
 
@@ -82,14 +88,22 @@ void initialize_new_round(std::string round_id) {
     std::cout << "New round alert" << std::endl;
     current_round = round_id;
     available_index = 0;
-    db.reset();
+    //db.reset();
     // TODO check if this is the right thing to do
-    db = make_unique<uint8_t[]>(number_of_items * size_per_item);
+    //db = make_unique<unsigned char[]>(number_of_items * size_per_item);
 }
 
 void store_message(int index, std::vector<unsigned char> const& label, std::vector<unsigned char> const& message) {
-    memcpy(&db.get()[index*size_per_item], message.data(), message.size());
+    std::cout << "Label: " << label.data() << std::endl;
+    std::cout << "Message size: " << message.size() << std::endl;
+    std::cout << "Expected message size: " << size_per_item << std::endl;
+    /*for (uint64_t j = 0; j < size_per_item; j++) {
+        db.get()[(index*size_per_item) + j] = message.data()[j];
+    } */   
+    
+    memcpy(&db.get()[index*size_per_item], message.data(), size_per_item);
     available_index = index + 1;
+    std::cout << "Message stored successfully" << std::endl;
 }
 
 void store_and_propagate_message(int index, std::vector<unsigned char> const& label, std::vector<unsigned char> const& message) {
@@ -116,20 +130,25 @@ void store_and_propagate_message(int index, std::vector<unsigned char> const& la
     }
 }
 
+
+void initialize_pir() {
+    params = new EncryptionParameters(scheme_type::BFV);
+    gen_params(number_of_items, size_per_item, N, logt, d, *params, pir_params);
+    server = new PIRServer(*params, pir_params); 
+    db = std::make_unique<uint8_t[]>(number_of_items * size_per_item);
+}    
+
+
 // This needs PIR, how to integrate?
 std::string retrieve_message(int client_id, std::vector<std::string> serializedQuery) {
     // Get galois keys of client from map
     GaloisKeys* galois_keys = keys_map[client_id].get_galois_keys(); 
-    EncryptionParameters params(scheme_type::BFV);
-    PirParams pir_params;
-    gen_params(number_of_items, size_per_item, N, logt, d, params, pir_params);
-    PIRServer server(params, pir_params);
-    server.set_galois_key(client_id, *galois_keys);
-    server.set_database(move(db), number_of_items, size_per_item);
-    server.preprocess_database();
+    server->set_database(move(db), number_of_items, size_per_item);
+    server->preprocess_database();
+    server->set_galois_key(client_id, *galois_keys);
 
     PirQuery query = deseralize_pir_query(serializedQuery);
-    PirReply reply = server.generate_reply(query, client_id);
+    PirReply reply = server->generate_reply(query, client_id);
     std::string serialized_reply = serialize_ciphertexts(reply);
     return serialized_reply;
 }

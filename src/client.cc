@@ -172,7 +172,8 @@ void retrieve_msg()
 	//TODO
 	//	- get index from label mapping
 	//	- for self testing...change to label_r once pir setup successfully
-	if (label_map.find(cur_round.get_label_s()) != label_map.end())
+	cout << "Looking for label: " << cur_round.get_label_s() << "\n";
+    if (label_map.find(cur_round.get_label_s()) != label_map.end())
         ele_index = label_map[cur_round.get_label_s()];
 	
 	cout << "Index is " << ele_index << " and label map size is " << label_map.size() << "\n"; 

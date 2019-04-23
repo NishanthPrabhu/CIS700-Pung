@@ -20,5 +20,6 @@ void store_and_propagate_message(int index, std::vector<unsigned char> const& la
 void store_message(int index, std::vector<unsigned char> const& label, std::vector<unsigned char> const& message);
 std::string retrieve_message(int, std::vector<std::string>);
 int send_index_vote();
+void initialize_pir();
 
 #endif //CIS700_PUNG_SLAVE_CALLBACKS_H

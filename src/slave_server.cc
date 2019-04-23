@@ -49,7 +49,8 @@ server_info* get_slave_server(std::string server_file, std::string server_name) 
 void start_slave_server(server_info *info) {
 	//initialize_pir();
     int port = info->get_port();
-	rpc::server srv(port);
+	initialize_pir();
+    rpc::server srv(port);
 
     srv.bind("set_client_key", &set_client_public_key);
 	srv.bind("set_and_propagate_client_key", &set_and_propagate_client_public_key); // Client sends it's public key
