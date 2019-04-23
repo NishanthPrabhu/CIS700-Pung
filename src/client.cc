@@ -74,24 +74,29 @@ void register_client(rpc::client *rpcclient, int id, string ip, string galois_ke
 
 void init_new_round(std::string round_id, vector<unsigned char> nonce) {
 
+	//cout << "Round notice\n";
     cur_round.set_round_id(round_id);
     cur_round.set_nonce(nonce);
     
     //cout << "New round: " << cur_round.get_round_id() << "\nNonce : " << get_hex(nonce.data(), nonce.size()) << std::endl;
     
     std::thread thread(&start_send_msg);
+    thread.detach();
     
     return;
 }
 
 void init_msg_retrieval()
 {
+	//cout << "Retrieve notice\n";
 	std::thread thread(&retrieve_msg);
+	thread.detach();
 	return;
 }
 
 void start_send_msg()
 {
+	//cout << "Send msg started\n";
 	if(peer.join_status())
     {
     	create_round_labels();
@@ -99,6 +104,8 @@ void start_send_msg()
    	}
     else
     	send_dummy_msg();
+    
+    //cout << "Send done\n";
 }
 
 void create_round_labels()
@@ -173,6 +180,8 @@ void send_msg()
 
 void retrieve_msg()
 {
+	//cout << "Retrieve started\n";
+		
 	bool label_found = true;
 	//TODO get label mapping
 	auto label_map = client.rpc_client->call("get_label_mapping").as<std::map<std::string, int>>();
@@ -182,11 +191,11 @@ void retrieve_msg()
 	//TODO
 	//	- get index from label mapping
 	//	- for self testing...change to label_r once pir setup successfully
-	cout << "Looking for label: " << cur_round.get_label_r() << "\n";
+	//cout << "Looking for label: " << cur_round.get_label_r() << "\n";
     if (label_map.find(cur_round.get_label_r()) != label_map.end())
         ele_index = label_map[cur_round.get_label_r()];
 	
-	cout << "Index is " << ele_index << " and label map size is " << label_map.size() << "\n"; 
+	//cout << "Index is " << ele_index << " and label map size is " << label_map.size() << "\n"; 
 	
 	
 	if(ele_index == -1)
@@ -242,7 +251,7 @@ void retrieve_msg()
 		cout << "Decrypted is " << decrypt_msg << "\n";
 	}
 	
-	cout << "Done retrieving\n";
+	//cout << "Done retrieving\n";
 }
 
 void initialize_client(int id, string master_ip, int master_port)
