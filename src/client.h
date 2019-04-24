@@ -31,7 +31,7 @@ enum command
 
 msg_client client;
 msg_peer peer;
-string message;
+string input;
 queue<string> msgs;
 round_info cur_round;
 

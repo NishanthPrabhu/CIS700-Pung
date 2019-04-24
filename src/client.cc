@@ -386,7 +386,7 @@ void display_help()
 
 command get_command()
 {
-	string input;
+	
 	getline(cin, input);
 	
 	if(!input.compare("/join"))
@@ -398,16 +398,13 @@ command get_command()
 	else if(!input.compare("/help"))
 		return HELP;
 	else
-	{
-		message = input;
 		return MSG;
-	}
 }
 
 void add_to_msgqueue()
 {
-	msgs.push(message);
-	message = "";
+	msgs.push(input);
+	input = "";
 }
 
 void remove_peer()
