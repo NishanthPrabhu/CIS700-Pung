@@ -2,6 +2,11 @@
 // Created by Nishanth Prabhu on 06/04/19.
 //
 
+//TODO
+//	- ctrl+c handler
+//	- destroying keys on quiting
+//	- handling when client quiot between conversation
+	
 #include "client.h"
 #include "rpc/server.h"
 
@@ -259,7 +264,7 @@ void retrieve_msg()
 		int sep = decrypt_msg.find('|');
 		int msg_length = atoi(decrypt_msg.substr(0, 2).c_str());
 		decrypt_msg = decrypt_msg.substr(sep+1, msg_length - (sep+1));
-		cout << "Decrypted is " << decrypt_msg;
+		cout << "\rpeer : " << decrypt_msg;
 	}
 	
 	//cout << "Done retrieving\n";
@@ -387,6 +392,7 @@ void display_help()
 command get_command()
 {
 	
+	cout << "me : ";
 	getline(cin, input);
 	
 	if(!input.compare("/join"))
