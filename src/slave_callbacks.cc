@@ -18,7 +18,7 @@
 std::map<int, client_info> keys_map;
 std::string current_round;
 int available_index = 0;
-std::unique_ptr<uint8_t[]> db;
+std::unique_ptr<unsigned char[]> db;
 
 EncryptionParameters *params;
 PirParams pir_params;
@@ -88,18 +88,19 @@ void initialize_new_round(std::string round_id) {
     std::cout << "New round alert" << std::endl;
     current_round = round_id;
     available_index = 0;
+    db = std::make_unique<unsigned char[]>(number_of_items * size_per_item);
 }
 
 void store_message(int index, /*std::vector<unsigned char> const& label*/std::string const& label, std::vector<unsigned char> const& message) {
+    available_index = index + 1;
     std::cout << "Label: " << label << std::endl;
     std::cout << "Message size: " << message.size() << std::endl;
     std::cout << "Expected message size: " << size_per_item << std::endl;
-    /*for (uint64_t j = 0; j < size_per_item; j++) {
+    for (uint64_t j = 0; j < size_per_item; j++) {
         db.get()[(index*size_per_item) + j] = message.data()[j];
-    } */   
+    }    
     
-    memcpy(&db.get()[index*size_per_item], message.data(), size_per_item);
-    available_index = index + 1;
+    //memcpy(&db.get()[index*size_per_item], message.data(), size_per_item);
     std::cout << "Message stored successfully" << std::endl;
 }
 
@@ -132,7 +133,7 @@ void initialize_pir() {
     params = new EncryptionParameters(scheme_type::BFV);
     gen_params(number_of_items, size_per_item, N, logt, d, *params, pir_params);
     server = new PIRServer(*params, pir_params); 
-    db = std::make_unique<uint8_t[]>(number_of_items * size_per_item);
+    db = std::make_unique<unsigned char[]>(number_of_items * size_per_item);
 }    
 
 
