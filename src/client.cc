@@ -264,7 +264,11 @@ void retrieve_msg()
 		int sep = decrypt_msg.find('|');
 		int msg_length = atoi(decrypt_msg.substr(0, 2).c_str());
 		decrypt_msg = decrypt_msg.substr(sep+1, msg_length - (sep+1));
-		cout << "\rpeer : " << decrypt_msg;
+		
+		stringstream stream(decrypt_msg);
+		cout << "\r";
+		while(getline(stream, response))
+			cout << "peer : " << response << "\n";
 	}
 	
 	//cout << "Done retrieving\n";
