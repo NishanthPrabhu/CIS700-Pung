@@ -269,6 +269,9 @@ void retrieve_msg()
 		cout << "\r";
 		while(getline(stream, response))
 			cout << "peer : " << response << "\n";
+			
+		cout << "me : " << std::flush;
+		
 	}
 	
 	//cout << "Done retrieving\n";
