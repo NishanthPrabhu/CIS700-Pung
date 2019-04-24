@@ -127,7 +127,7 @@ void create_round_labels()
 
 void send_dummy_msg()
 {
-	unsigned char tmp_s_label[crypto_auth_hmacsha256_BYTES/2];
+	unsigned char tmp_s_label[crypto_auth_hmacsha256_BYTES];
     randombytes_buf(tmp_s_label, sizeof tmp_s_label);
     
     string label = get_hex(tmp_s_label, sizeof tmp_s_label);
@@ -144,8 +144,16 @@ void send_msg()
 {
 	if(!msgs.empty() && peer.join_status())
 	{
-		string message = msgs.front();
-		msgs.pop();
+		string message;
+		
+		while(!msgs.empty())
+		{
+			message.append(msgs.front());
+			message.append("\n");
+			msgs.pop();
+		}
+		
+		
 		
 		int cur_length = message.length();
 		cur_length = to_string(cur_length).length()+cur_length+1;
@@ -191,11 +199,11 @@ void retrieve_msg()
 	//TODO
 	//	- get index from label mapping
 	//	- for self testing...change to label_r once pir setup successfully
-	//cout << "Looking for label: " << cur_round.get_label_r() << "\n";
+//	cout << "Looking for label: " << cur_round.get_label_r() << "\n";
     if (label_map.find(cur_round.get_label_r()) != label_map.end())
         ele_index = label_map[cur_round.get_label_r()];
 	
-	//cout << "Index is " << ele_index << " and label map size is " << label_map.size() << "\n"; 
+//	cout << "Index is " << ele_index << " and label map size is " << label_map.size() << "\n"; 
 	
 	
 	if(ele_index == -1)
@@ -231,6 +239,8 @@ void retrieve_msg()
 		
 		Plaintext result = client.pir_client->decode_reply(reply);
 		
+//		cout << result.to_string();
+		
 		vector<unsigned char> ciphertext(N * logt / 8);
 	    coeffs_to_bytes(logt, result, ciphertext.data(), (N * logt) / 8);
 
@@ -242,13 +252,14 @@ void retrieve_msg()
 									   cur_round.get_nonce().data(),
 									   peer.get_key_e().data()) != 0) {
 			cout << "WARNING forged message recieved...\n";
+			return;
 		}
 		
 		string decrypt_msg = string((const char *)decrypted);
 		int sep = decrypt_msg.find('|');
 		int msg_length = atoi(decrypt_msg.substr(0, 2).c_str());
 		decrypt_msg = decrypt_msg.substr(sep+1, msg_length - (sep+1));
-		cout << "Decrypted is " << decrypt_msg << "\n";
+		cout << "Decrypted is " << decrypt_msg;
 	}
 	
 	//cout << "Done retrieving\n";
@@ -449,7 +460,7 @@ int main(int argc, char **argv) {
 									cout << "Join a peer first to start communication\n";
 								else
 								{
-									cout << "Adding to msg queue\n";
+//									cout << "Adding to msg queue\n";
 									add_to_msgqueue();
 								}
 								break;
