@@ -1,11 +1,6 @@
 //
 // Created by Nishanth Prabhu on 06/04/19.
 //
-
-//TODO
-//	- ctrl+c handler
-//	- destroying keys on quiting
-//	- handling when client quiot between conversation
 	
 #include "client.h"
 #include "rpc/server.h"
@@ -45,6 +40,37 @@ string get_hex(const unsigned char *bin, const size_t bin_len)
     free(hex);  
     
     return str_key;  
+}
+
+void sigHandler(int sigNum)
+{
+	if(sigNum == SIGINT ||
+	   sigNum == SIGTERM ||
+	   sigNum == SIGQUIT ||
+	   sigNum == SIGTSTP)
+	destroy_keys_and_data();
+}
+
+/*!
+ * set different signal handlers
+ */
+void setUpSignals()
+{   
+     
+    //changing the handler for SIGINT
+    if(signal(SIGINT, sigHandler) == SIG_ERR)
+        perror("signal()");
+
+    //changing the handler for SIGTERM
+    if(signal(SIGTERM, sigHandler) == SIG_ERR)
+        perror("signal()");
+
+    //changing the handler for SIGTSTP - pause
+    if(signal(SIGTSTP, sigHandler) == SIG_ERR)
+        perror("signal()");
+    
+    if(signal(SIGQUIT, sigHandler) == SIG_ERR)
+        perror("signal()");
 }
 
 string getIPAddress(){
@@ -427,8 +453,11 @@ void remove_peer()
 
 void destroy_keys_and_data()
 {
+	client.rpc_client->call("shutdown_client", client.get_id());
 	peer.clear_peer_info();
 	client.clear_client();
+	
+	run = false;
 }
 
 int main(int argc, char **argv) {
@@ -440,10 +469,11 @@ int main(int argc, char **argv) {
 	}
 	
 	init();
+	
+	setUpSignals();
 			
 	int peer_id;
 	
-	bool run = true;
 	command command_id;
 	
 	initialize_client(atoi(argv[1]), string(argv[2]), atoi(argv[3]));
@@ -469,18 +499,17 @@ int main(int argc, char **argv) {
 			case MSG:			if(!peer.join_status())
 									cout << "Join a peer first to start communication\n";
 								else
-								{
-//									cout << "Adding to msg queue\n";
 									add_to_msgqueue();
-								}
 								break;
 								
-			case QUIT_CHAT: 	remove_peer();
+			case QUIT_CHAT: 	//TODO
+								//	- handling when client quit between conversation
+								//  - send quit message to oth client
+								remove_peer();
 								break;
 			
 			case QUIT_CLIENT: 	cout << "Destroying all private information\n";
 								destroy_keys_and_data();
-							  	run = false;
 							  	break;
 							  	
 			case HELP:			display_help();

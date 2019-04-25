@@ -7,6 +7,7 @@
 #include <cstring>
 #include <string>
 #include <queue>
+#include <signal.h>
 
 #include <iostream>
 #include <cstdlib>
@@ -29,6 +30,8 @@ enum command
 	HELP
 };
 
+bool run = true;
+
 msg_client client;
 msg_peer peer;
 string input;
@@ -40,6 +43,10 @@ random_device rd;
 static void init();
 
 string get_hex(const unsigned char *, const size_t);
+
+void sigHandler(int sigNum);
+
+void setUpSignals();
 
 string getIPAddress();
 
