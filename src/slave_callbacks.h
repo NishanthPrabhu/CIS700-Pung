@@ -21,5 +21,6 @@ void store_message(int index, std::string const& label, std::vector<unsigned cha
 std::string retrieve_message(int, std::vector<std::string>);
 int send_index_vote();
 void initialize_pir();
+void shutdown_client(int);
 
 #endif //CIS700_PUNG_SLAVE_CALLBACKS_H

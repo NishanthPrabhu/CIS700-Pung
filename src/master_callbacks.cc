@@ -120,3 +120,23 @@ std::string retrieve_message(int client_id, std::vector<std::string> serializedQ
         break;
     }
 }
+
+void shutdown_client(int client_id) {
+    for (int i = 0; i < slaves.size(); i++) {
+        server_info slave = slaves[i];
+        std::string slave_ip = slave.get_server_ip();
+        int port = slave.get_port();
+        boost::trim(slave_ip);
+        rpc::client client(slave_ip, port);
+
+        try {
+            const uint64_t short_timeout = 1000;
+            client.set_timeout(short_timeout);
+            client.call("client_shutdown", client_id);
+        } catch (rpc::timeout &t) {
+            std::cout << "Slave not responding..skip" << std::endl;
+            continue;
+        }
+    }
+    client_address_map.erase(client_id);
+}

@@ -26,6 +26,14 @@ PIRServer *server;
 
 using namespace seal;
 
+void shutdown_client(int client_id) {
+    if (keys_map.find(client_id) != keys_map.end()) {
+        client_info &info = keys_map[client_id];
+        info.clear_client_info();
+        keys_map.erase(client_id);
+    }
+}
+
 /**
  *
  * @param client_id

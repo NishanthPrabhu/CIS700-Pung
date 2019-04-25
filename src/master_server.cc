@@ -170,6 +170,7 @@ void start_master_server(server_info *info) {
 	srv.bind("store_message", &store_client_message); // Client sends message to store
 	srv.bind("retrieve_message", &retrieve_message); // Client retrieves message
     srv.bind("get_label_mapping", &get_label_mapping);
+    srv.bind("shutdown_client", &shutdown_client);
     srv.run();
     //srv.async_run(3);
     //std::cin.ignore();
