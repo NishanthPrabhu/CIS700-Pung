@@ -23,8 +23,8 @@ void client_info::clear_client_info()
 	this->client_id = -1;
 	this->client_ip = "";
 	this->publickey.clear();
-	if(this->galoiskeys != NULL)
-		delete this->galoiskeys;
+	//if(this->galoiskeys != NULL)
+	//	delete this->galoiskeys;
 		
 	this->galoiskeys = NULL;
 }
