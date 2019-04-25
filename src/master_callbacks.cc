@@ -13,7 +13,6 @@
 #include <vector>
 
 std::map<int, std::string> client_address_map;
-//std::vector<std::tuple<std::string, int>> label_map;
 std::map<std::string, int> label_map;
 
 /**
@@ -39,7 +38,7 @@ bool set_client_public_key(int client_id, std::string const& client_ip,
   	    rpc::client client(slave_ip, port);
   	  
         try {
-            const uint64_t short_timeout = 7000;
+            const uint64_t short_timeout = 500;
             client.set_timeout(short_timeout);
             client.call("set_and_propagate_client_key", client_id, client_ip, publickey, galoiskey);
         } catch (rpc::timeout &t) {
@@ -64,7 +63,7 @@ std::vector<unsigned char> get_client_public_key(int client_id) {
 	    rpc::client client(slave_ip, port);
 	
         try {
-            const uint64_t short_timeout = 2000;
+            const uint64_t short_timeout = 500;
             client.set_timeout(short_timeout);
             std::cout << "Calling client\n";
             result = client.call("get_client_key", client_id).as<std::vector<unsigned char>>();
@@ -82,31 +81,42 @@ std::map<std::string, int> get_label_mapping() {
     return label_map;
 }    
 
-void test_unsigned_char(std::vector<unsigned char> buff) {
-    RPCLIB_MSGPACK::sbuffer sbuf;
-    RPCLIB_MSGPACK::packer<RPCLIB_MSGPACK::sbuffer> packer(sbuf);
-}
-
 void store_client_message(std::string label, std::vector<unsigned char>const& message) {
-  	int slave_index = get_slave_index();
-	std::string slave_ip = slaves[slave_index].get_server_ip();
-    boost::trim(slave_ip);
-    int port = slaves[slave_index].get_port();
+  	
+    while (true) {
+        int slave_index = get_slave_index();
+	    std::string slave_ip = slaves[slave_index].get_server_ip();
+        boost::trim(slave_ip);
+        int port = slaves[slave_index].get_port();
 
-    int index = get_label_index();
-    label_map[label] = index;
-    std::cout << "Storing label: " << label << " at index: " << index << std::endl;
-    rpc::client client(slave_ip, port);
-	client.call("store_and_propagate_message", index, label, message);
+        int index = get_label_index();
+        label_map[label] = index;
+        std::cout << "Storing label: " << label << " at index: " << index << std::endl;
+        rpc::client client(slave_ip, port);
+	    try {
+            client.call("store_and_propagate_message", index, label, message);
+        } catch (rpc::timeout &t) {
+            continue;
+        }
+        break;
+    }
 }
 
-// This needs PIR, how to integrate?
 std::string retrieve_message(int client_id, std::vector<std::string> serializedQuery)
 {
-	int slave_index = get_slave_index();
-	std::string slave_ip = slaves[slave_index].get_server_ip();
-    boost::trim(slave_ip);
-    int port = slaves[slave_index].get_port();
-    rpc::client client(slave_ip, port);
-	return client.call("retrieve_client_message", client_id, serializedQuery).as<std::string>();
+	while (true) {
+        int slave_index = get_slave_index();
+    	std::string slave_ip = slaves[slave_index].get_server_ip();
+        boost::trim(slave_ip);
+        int port = slaves[slave_index].get_port();
+        rpc::client client(slave_ip, port);
+        try {
+	        const uint64_t short_timeout = 500;
+            client.set_timeout(short_timeout);
+            return client.call("retrieve_client_message", client_id, serializedQuery).as<std::string>();
+        } catch (rpc::timeout &t) {
+            continue;
+        }
+        break;
+    }
 }

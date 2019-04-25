@@ -23,7 +23,6 @@ std::unique_ptr<unsigned char[]> db;
 EncryptionParameters *params;
 PirParams pir_params;
 PIRServer *server;
-bool initialized = false;
 
 using namespace seal;
 
@@ -59,11 +58,12 @@ void set_and_propagate_client_public_key(int client_id, std::string const& clien
 		rpc::client client(slave_ip, port);
 	    
         try {
-            const uint64_t short_timeout = 1000;
+            const uint64_t short_timeout = 500;
             client.set_timeout(short_timeout);
             client.call("set_client_key", client_id, client_ip, publickey, galoiskey);
         } catch (rpc::timeout &t) {
-            std::cout << "Slave not responding..skip" << std::endl;    
+            std::cout << "Slave not responding..skip" << std::endl;
+            continue;
         }    
     }
 }
@@ -91,16 +91,16 @@ void initialize_new_round(std::string round_id) {
     db = std::make_unique<unsigned char[]>(number_of_items * size_per_item);
 }
 
-void store_message(int index, /*std::vector<unsigned char> const& label*/std::string const& label, std::vector<unsigned char> const& message) {
+void store_message(int index,std::string const& label, std::vector<unsigned char> const& message) {
     available_index = index + 1;
     std::cout << "Label: " << label << std::endl;
     std::cout << "Message size: " << message.size() << std::endl;
     std::cout << "Expected message size: " << size_per_item << std::endl;
-    for (uint64_t j = 0; j < size_per_item; j++) {
+    /*for (uint64_t j = 0; j < size_per_item; j++) {
         db.get()[(index*size_per_item) + j] = message.data()[j];
-    }    
+    }*/   
     
-    //memcpy(&db.get()[index*size_per_item], message.data(), size_per_item);
+    memcpy(&db.get()[index*size_per_item], message.data(), size_per_item);
     std::cout << "Message stored successfully" << std::endl;
 }
 
@@ -119,11 +119,12 @@ void store_and_propagate_message(int index, std::string const& label, std::vecto
 		rpc::client client(slave_ip, port);
 	    
         try {
-            const uint64_t short_timeout = 1000;
+            const uint64_t short_timeout = 500;
             client.set_timeout(short_timeout);
             client.call("store_message", index, label, message);
         } catch (rpc::timeout &t) {
             std::cout << "Slave not responding..skip" << std::endl;    
+            continue;
         }    
     }
 }
@@ -137,7 +138,6 @@ void initialize_pir() {
 }    
 
 
-// This needs PIR, how to integrate?
 std::string retrieve_message(int client_id, std::vector<std::string> serializedQuery) {
     // Get galois keys of client from map
     GaloisKeys* galois_keys = keys_map[client_id].get_galois_keys(); 
