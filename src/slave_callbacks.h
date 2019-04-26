@@ -19,6 +19,7 @@ void store_and_propagate_message(int index, std::string const& label,
                                  std::vector<unsigned char> const& message);
 void store_message(int index, std::string const& label, std::vector<unsigned char> const& message);
 std::string retrieve_message(int, std::vector<std::string>);
+void start_retrieve_stage(std::string);
 int send_index_vote();
 void initialize_pir();
 void shutdown_client(int);

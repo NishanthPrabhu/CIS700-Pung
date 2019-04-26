@@ -61,6 +61,7 @@ void start_slave_server(server_info *info) {
 	srv.bind("rounds_notice", &initialize_new_round);
     srv.bind("index_vote", &send_index_vote);
     srv.bind("client_shutdown", &shutdown_client);
+    srv.bind("retrieve_notice", &start_retrieve_stage);
     srv.run(); // Change this to async?
     //std::cin.ignore();
 }

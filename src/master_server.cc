@@ -65,7 +65,7 @@ void send_rounds_notice_clients(std::string client_function, int round_number, s
 
 
         try {
-            const uint64_t short_timeout = 1000;
+            const uint64_t short_timeout = 500;
             rpcclient.set_timeout(short_timeout);
             if (client_function == "rounds_notice") {
                 rpcclient.call(client_function, round_id, nonce);
@@ -94,7 +94,7 @@ int get_label_index() {
         rpc::client client(slave_ip, port);
 
         try {
-            const uint64_t short_timeout = 1000;
+            const uint64_t short_timeout = 500;
             client.set_timeout(short_timeout);
             vote = client.call("index_vote").as<int>();
             max_index_elected = std::max(max_index_elected, vote);
@@ -108,7 +108,7 @@ int get_label_index() {
     return max_index_elected;
 }    
 
-void send_rounds_notice_slaves(int round_number) {
+void send_rounds_notice_slaves(std::string slave_function, int round_number) {
     std::string round_id = "round_" + std::to_string(round_number);
     
     for (int i = 0; i < slaves.size(); i++) {
@@ -119,9 +119,9 @@ void send_rounds_notice_slaves(int round_number) {
         rpc::client client(slave_ip, port);
 
         try {
-            const uint64_t short_timeout = 1000;
+            const uint64_t short_timeout = 500;
             client.set_timeout(short_timeout);
-            client.call("rounds_notice", round_id);
+            client.call(slave_function, round_id);
         } catch (rpc::timeout &t) {
             std::cout << "Slave not responding..skip" << std::endl;
             continue;
@@ -140,15 +140,16 @@ void round_master(int round_length) {
         randombytes_buf(nonce.data(), nonce.size());
 
         label_map.clear();
-        send_rounds_notice_slaves(round_number);
+        send_rounds_notice_slaves("rounds_notice", round_number);
         send_rounds_notice_clients("rounds_notice", round_number, nonce);
         std::cout << "Send notice to clients.." << std::endl;
-        std::cout << "going to sleep.." << std::endl;
         std::this_thread::sleep_for(std::chrono::milliseconds(round_length/2));
    
         std::cout << "Retrieve notice to clients.." << std::endl;
+        send_rounds_notice_slaves("retrieve_notice", round_number);
+        std::this_thread::sleep_for(std::chrono::milliseconds(round_length/4));
         send_rounds_notice_clients("retrieve_notice", round_number, nonce);
-        std::this_thread::sleep_for(std::chrono::milliseconds(round_length/2));
+        std::this_thread::sleep_for(std::chrono::milliseconds(round_length/4));
     }    
 }    
 

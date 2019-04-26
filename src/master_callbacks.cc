@@ -94,6 +94,8 @@ void store_client_message(std::string label, std::vector<unsigned char>const& me
         std::cout << "Storing label: " << label << " at index: " << index << std::endl;
         rpc::client client(slave_ip, port);
 	    try {
+	        const uint64_t short_timeout = 500;
+            client.set_timeout(short_timeout);
             client.call("store_and_propagate_message", index, label, message);
         } catch (rpc::timeout &t) {
             continue;
