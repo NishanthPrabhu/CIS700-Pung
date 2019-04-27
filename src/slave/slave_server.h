@@ -7,7 +7,7 @@
 
 #include <vector>
 #include <map>
-#include "server_info.h"
+#include "utils/server_info.h"
 #include "pir_params.h"
 
 extern std::vector<server_info> slaves; // Global vector to hold slave servers information

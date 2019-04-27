@@ -5,8 +5,6 @@
 #include "client.h"
 #include "rpc/server.h"
 
-#include "master_callbacks.h"
-
 static void init(void)
 {
     if (sodium_init() != 0)
@@ -49,6 +47,9 @@ void sigHandler(int sigNum)
 	   sigNum == SIGQUIT ||
 	   sigNum == SIGTSTP)
 	destroy_keys_and_data();
+	
+	cout << "\n";
+	exit(0);
 }
 
 /*!
@@ -183,8 +184,6 @@ void send_msg()
 			message.append("\n");
 			msgs.pop();
 		}
-		
-		
 		
 		int cur_length = message.length();
 		cur_length = to_string(cur_length).length()+cur_length+1;
@@ -393,7 +392,7 @@ bool create_comm_keys(int peer_id)
     											key.data());
     else
     {
-    	cout << "Both client ids cannot be same. Exiting try again\n";
+    	cout << "Both client ids cannot be same. Try again with a different peer_id\n";
     	return false;
     }
     
@@ -407,6 +406,9 @@ bool create_comm_keys(int peer_id)
     cout << "Key_l : " << get_hex(peer.get_key_e().data(), crypto_kx_SESSIONKEYBYTES) << "\n";
     
 	peer.set_peer_info(client_info(peer_id, "", key, NULL));
+	
+	cout << "Communication started with peer " << peer_id << "\n";
+	cout << "Type /help anytime to check other command options\n";
     
     return true;
 	
@@ -455,6 +457,8 @@ void destroy_keys_and_data()
 {
 	client.rpc_client->call("shutdown_client", client.get_id());
 	peer.clear_peer_info();
+	
+	cout << "Destroying all private information\n";
 	client.clear_client();
 	
 	run = false;
@@ -489,11 +493,7 @@ int main(int argc, char **argv) {
 			case JOIN_PEER: 	cout << "Enter peer client id\n";
 								cin >> peer_id;
 								cin.get();
-								if(create_comm_keys(peer_id))
-								{
-									cout << "Communication started with peer " << peer_id << "\n";
-									cout << "Type /help anytime to check other command options\n";
-								}
+								create_comm_keys(peer_id)
 								break;
 								
 			case MSG:			if(!peer.join_status())
@@ -505,11 +505,11 @@ int main(int argc, char **argv) {
 			case QUIT_CHAT: 	//TODO
 								//	- handling when client quit between conversation
 								//  - send quit message to oth client
+								cout << "Ending chat and removing shared keys\n";
 								remove_peer();
 								break;
 			
-			case QUIT_CLIENT: 	cout << "Destroying all private information\n";
-								destroy_keys_and_data();
+			case QUIT_CLIENT: 	destroy_keys_and_data();
 							  	break;
 							  	
 			case HELP:			display_help();

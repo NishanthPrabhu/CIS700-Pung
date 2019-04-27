@@ -6,7 +6,7 @@
 #include <vector>
 #include <map>
 #include <limits>
-#include "server_info.h"
+#include "utils/server_info.h"
 #include "master_callbacks.h"
 #include "rpc/server.h"
 #include "rpc/client.h"

@@ -5,7 +5,7 @@
 #include <iostream>
 #include "master_callbacks.h"
 #include "master_server.h"
-#include "server_info.h"
+#include "utils/server_info.h"
 #include "rpc/msgpack.hpp"
 #include "rpc/client.h"
 #include "rpc/rpc_error.h"

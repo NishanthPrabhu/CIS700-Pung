@@ -12,7 +12,7 @@
 #include <sodium.h>
 #include "rpc/client.h"
 
-#include "SealPIR/pir_client.hpp"
+#include "SealPIR/client/pir_client.hpp"
 
 using namespace std;
 

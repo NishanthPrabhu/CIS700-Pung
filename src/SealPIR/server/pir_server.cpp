@@ -1,5 +1,4 @@
 #include "pir_server.hpp"
-#include "pir_client.hpp"
 
 using namespace std;
 using namespace seal;

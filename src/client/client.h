@@ -11,11 +11,12 @@
 
 #include <iostream>
 #include <cstdlib>
+#include <random>
 #include <boost/algorithm/string.hpp>
 
 #include "msg_client.h"
-#include "pir_params.h"
-#include <random>
+#include "utils/pir_params.h"
+
 
 using namespace::std;
 
@@ -75,6 +76,8 @@ void display_help();
 command get_command();
 
 void add_to_msgqueue();
+
+void remove_peer();
 
 void destroy_keys_and_data();
 

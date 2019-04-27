@@ -1,10 +1,9 @@
 #pragma once
 
-#include "pir.hpp"
+#include "utils/pir.hpp"
 #include <map>
 #include <memory>
 #include <vector>
-#include "pir_client.hpp"
 
 class PIRServer {
   public:

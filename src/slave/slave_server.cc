@@ -2,7 +2,7 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
-#include "server_info.h"
+#include "utils/server_info.h"
 #include "slave_callbacks.h"
 #include "rpc/server.h"
 #include <boost/algorithm/string.hpp>

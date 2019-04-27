@@ -7,12 +7,12 @@
 #include <memory>
 #include "slave_callbacks.h"
 #include "slave_server.h"
-#include "server_info.h"
-#include "client_info.h"
+#include "utils/server_info.h"
+#include "utils/client_info.h"
 #include "rpc/client.h"
 #include "rpc/rpc_error.h"
-#include "SealPIR/pir.hpp"
-#include "SealPIR/pir_server.hpp"
+#include "SealPIR/utils/pir.hpp"
+#include "SealPIR/server/pir_server.hpp"
 #include <boost/algorithm/string.hpp>
 
 std::map<int, client_info> keys_map;

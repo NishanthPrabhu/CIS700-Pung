@@ -8,7 +8,7 @@
 #include <vector>
 #include <string>
 #include "rpc/client.h"
-#include "master_callbacks.h"
+#include "master/master_callbacks.h"
 #include <boost/algorithm/string.hpp>
 using namespace::std;
 

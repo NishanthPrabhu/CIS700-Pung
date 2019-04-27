@@ -6,7 +6,7 @@
 #define CIS700_PUNG_MASTER_SERVER_H
 
 #include <vector>
-#include "server_info.h"
+#include "utils/server_info.h"
 
 extern std::vector<server_info> slaves; // Global vector to hold slave servers information
 static int load_balancer_index;
