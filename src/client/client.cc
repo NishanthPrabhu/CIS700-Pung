@@ -493,7 +493,7 @@ int main(int argc, char **argv) {
 			case JOIN_PEER: 	cout << "Enter peer client id\n";
 								cin >> peer_id;
 								cin.get();
-								create_comm_keys(peer_id)
+								create_comm_keys(peer_id);
 								break;
 								
 			case MSG:			if(!peer.join_status())

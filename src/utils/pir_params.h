@@ -5,7 +5,7 @@
 #ifndef CIS700_PUNG_PIR_PARAMS_H
 #define CIS700_PUNG_PIR_PARAMS_H
 
-#include "SealPIR/pir.hpp"
+#include "SealPIR/utils/pir.hpp"
 #include <seal/seal.h>
 #include <sodium.h>
 

@@ -8,7 +8,7 @@
 #include <sodium.h>
 #include <string>
 
-#include "client_info.h"
+#include "utils/client_info.h"
 #include <sodium.h>
 #include "rpc/client.h"
 

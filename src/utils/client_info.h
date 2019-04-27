@@ -7,7 +7,7 @@
 
 #include <string>
 #include <vector>
-#include "SealPIR/pir.hpp"
+#include "SealPIR/utils/pir.hpp"
 
 using namespace std;
 using namespace seal;
