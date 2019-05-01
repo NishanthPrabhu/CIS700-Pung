@@ -2,27 +2,56 @@
 
 Dependencies 
 
-1. rpclib - https://github.com/rpclib/rpclib, change include and lib in cmakelist.txt
-2. boost - normal way, cmakelist.txt changes not required
-3. SealPIR :
+1. boost - normal way, cmakelist.txt changes not required
+2. Microsoft Seal : https://github.com/Microsoft/SEAL
+3. Libsodium : https://libsodium.gitbook.io
+4. rpclib - https://github.com/rpclib/rpclib
 
-Add this to Cmakelists.txt
+Set the following environment variables in you ~/.bashrc file after compiling libsodium and rpclib
 
-file(GLOB seal_src
-    "src/SealPIR/*.cpp"
-    "src/SealPIR/*.hpp"
-)
+SODIUM_LIB, RPCLIB_LIB, RPCLIB_INCLUDE_DIRS
 
-add_executable(master_server ${MASTER_SOURCE_FILES} ${seal_src})
+ - Example : 
+	Add the following lines to your ~/.bashrc
+	
+    	export SODIUM_LIB="path to libsodium.so"
+    	export RPCLIB_LIB="path to librpc.a"
+    	export RPCLIB_INCLUDE_DIRS="path to rpclib/include"
+	
+    After adding these lines issue the command
 
-add_executable(slave_server ${SLAVE_SOURCE_FILES} ${seal_src})
+        source ~/.bashrc
+	
+To build this project :
 
-add_executable(client ${CLIENT_SOURCE_FILES} ${seal_src})
+    mkdir build<br/>
+    cd build<br/>
+    cmake ..<br/>
+    cmake --build .<br/>
+    
+To run :
+- For Master Server
 
+        ./bin/master_server [server_list_file] [length of round(in milliseconds)]
+        
+    - Example : ./bin/master_server server_list 2000
+- For Slave Server
 
-To build
+        ./bin/slave_server [server_list_file] [slave{slave id}]
+        
+    - Example : ./bin/slave_server server_list slave1, ./bin/slave_server server_list slave2 and so on... 
+- For Client
 
-mkdir build<br/>
-cd build<br/>
-cmake ..<br/>
-cmake --build .<br/>
+        ./client [client_id] [master_ip] [master_port]
+        
+    - Example : ./bin/client 1 localhost 30000
+    
+Sample server_list_file is provided in the root directory of the repo.
+
+Once client is started the following commands are supported :
+
+- /join : to enter conversation with a particular client
+- /end  : to end chat with current peer
+- /quit : to quit the client
+- /help : to display list of available commands
+
