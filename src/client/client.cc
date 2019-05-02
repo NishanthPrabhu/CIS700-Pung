@@ -5,6 +5,7 @@
 #include "client.h"
 #include "rpc/server.h"
 
+//initializes libsodium
 static void init(void)
 {
     if (sodium_init() != 0)
@@ -40,6 +41,7 @@ string get_hex(const unsigned char *bin, const size_t bin_len)
     return str_key;  
 }
 
+//signal handlers if a client is quiting so as to destroy all sensitive data properly
 void sigHandler(int sigNum)
 {
 	if(sigNum == SIGINT ||
@@ -48,13 +50,13 @@ void sigHandler(int sigNum)
 	   sigNum == SIGTSTP)
 	destroy_keys_and_data();
 	
+	run = false;
+	
 	cout << "\n";
 	exit(0);
 }
 
-/*!
- * set different signal handlers
- */
+//set different signal handlers
 void setUpSignals()
 {   
      
@@ -74,6 +76,8 @@ void setUpSignals()
         perror("signal()");
 }
 
+// returns the IP Address of the current machine
+// not used in implementation anywhere can be removed
 string getIPAddress(){
     string ipAddress="Unable to get IP Address";
     struct ifaddrs *interfaces = NULL;
@@ -99,11 +103,13 @@ string getIPAddress(){
     return ipAddress;
 }
 
+// registers the client to the server
 void register_client(rpc::client *rpcclient, int id, string ip, string galois_keys)
 {
 	rpcclient->call("set_client_key", id, ip, client.get_public_key(), galois_keys);
 }
 
+// updates the round number and starts a thread in detached mode to send msg to server
 void init_new_round(std::string round_id, vector<unsigned char> nonce) {
 
 	//cout << "Round notice\n";
@@ -118,6 +124,7 @@ void init_new_round(std::string round_id, vector<unsigned char> nonce) {
     return;
 }
 
+// starts a thread in detached mode to retrieve messages from the server
 void init_msg_retrieval()
 {
 	//cout << "Retrieve notice\n";
@@ -126,6 +133,7 @@ void init_msg_retrieval()
 	return;
 }
 
+// if peer available then create labels and send the message else send a dummy msg
 void start_send_msg()
 {
 	//cout << "Send msg started\n";
@@ -140,6 +148,7 @@ void start_send_msg()
     //cout << "Send done\n";
 }
 
+// create label_s and label_r for the current round using key_l
 void create_round_labels()
 {
 	string s_str = cur_round.get_round_id()+"||"+to_string(peer.get_peer_id());
@@ -157,6 +166,7 @@ void create_round_labels()
 	
 }
 
+// sends a dummy msg to a dummy label
 void send_dummy_msg()
 {
 	unsigned char tmp_s_label[crypto_auth_hmacsha256_BYTES];
@@ -172,12 +182,14 @@ void send_dummy_msg()
     client.rpc_client->call("store_message", label, ciphertext);
 }
 
+// sends the message in msg queue to the server
 void send_msg()
 {
 	if(!msgs.empty() && peer.join_status())
 	{
 		string message;
 		
+		// appending all messages
 		while(!msgs.empty())
 		{
 			message.append(msgs.front());
@@ -188,9 +200,11 @@ void send_msg()
 		int cur_length = message.length();
 		cur_length = to_string(cur_length).length()+cur_length+1;
 		
+		// send dummy msg if current message legth if greater than MAX_LENGTH
 		if(cur_length > MESSAGE_LEN)
 		{
 			cout << "Packed message length greater than MAX_LENGTH\n";
+			send_dummy_msg();
 			return;
 		}
 		
@@ -204,6 +218,7 @@ void send_msg()
 		
 		ciphertext.resize(CIPHERTEXT_LEN);
 	
+		// encrypt the message
 		crypto_secretbox_easy(ciphertext.data(),
 							 (const unsigned char*)message.c_str(),
 							 message.length(),
@@ -216,26 +231,26 @@ void send_msg()
 		send_dummy_msg();
 }
 
+// retrive messages from the server
 void retrieve_msg()
 {
 	//cout << "Retrieve started\n";
 		
 	bool label_found = true;
-	//TODO get label mapping
+	// get label mapping
 	auto label_map = client.rpc_client->call("get_label_mapping").as<std::map<std::string, int>>();
     int ele_index = -1;
 
 	
-	//TODO
 	//	- get index from label mapping
-	//	- for self testing...change to label_r once pir setup successfully
-//	cout << "Looking for label: " << cur_round.get_label_r() << "\n";
+	//	cout << "Looking for label: " << cur_round.get_label_r() << "\n";
     if (label_map.find(cur_round.get_label_r()) != label_map.end())
         ele_index = label_map[cur_round.get_label_r()];
 	
-//	cout << "Index is " << ele_index << " and label map size is " << label_map.size() << "\n"; 
+	//	cout << "Index is " << ele_index << " and label map size is " << label_map.size() << "\n"; 
 	
 	
+	//if index not found choose a random label index
 	if(ele_index == -1)
 	{
 		if(label_map.size() != 0)
@@ -247,14 +262,14 @@ void retrieve_msg()
 			return;
 	}
 	
-	//TODO generate PIR query
+	// generate PIR query
 	
 	uint64_t index = client.pir_client->get_fv_index(ele_index, size_per_item);   // index of FV plaintext
 	uint64_t offset = client.pir_client->get_fv_offset(ele_index, size_per_item); // offset in FV plaintext
 	
 	PirQuery query = client.pir_client->generate_query(index);
 	
-	//TODO serialize PIR query and send message
+	// serialize PIR query and send message
 	
 	auto s_query = serialize_pir_query(query);
 	
@@ -262,20 +277,20 @@ void retrieve_msg()
 	
 	if(label_found)
 	{	
-		//TODO
 		//	- recieve PIR response and decrypt message
-		//	- check these values while deserializing
 		PirReply reply = deserialize_ciphertexts(NUM_PIR_REPLY_CIPHER, response, CIPHER_SIZE);
 		
+		// obtain plaintext from PirReply received
 		Plaintext result = client.pir_client->decode_reply(reply);
 		
-//		cout << result.to_string();
+		// cout << result.to_string();
 		
 		vector<unsigned char> ciphertext(N * logt / 8);
 	    coeffs_to_bytes(logt, result, ciphertext.data(), (N * logt) / 8);
 
 		unsigned char decrypted[MESSAGE_LEN];
 		
+		// decrypt the message
 		if (crypto_secretbox_open_easy(decrypted,
 									   ciphertext.data()+(offset*size_per_item),
 									   CIPHERTEXT_LEN,
@@ -285,6 +300,7 @@ void retrieve_msg()
 			return;
 		}
 		
+		// display the decrypted messages
 		string decrypt_msg = string((const char *)decrypted);
 		int sep = decrypt_msg.find('|');
 		int msg_length = atoi(decrypt_msg.substr(0, 2).c_str());
@@ -302,6 +318,7 @@ void retrieve_msg()
 	//cout << "Done retrieving\n";
 }
 
+// initialize the client by creating its public, private and galios keys and registering with server
 void initialize_client(int id, string master_ip, int master_port)
 {
 	cout << "\n--------------------\nInitializing Client\n--------------------\n";
@@ -334,33 +351,9 @@ void initialize_client(int id, string master_ip, int master_port)
     register_client(rpc_client, id, ip, serialize_galoiskeys(galois_keys)); 
     
     client.init_msg_client(id, ip, rpc_client, pir_client, master_ip, master_port);
-    
-//    cout << "___________________________________________\n";
-//    cout << "Trying PIR Query counts\n";
-//    
-//    int ele_index = 3;
-//    
-//    uint64_t index = pir_client->get_fv_index(ele_index, size_per_item);   // index of FV plaintext
-//    uint64_t offset = pir_client->get_fv_offset(ele_index, size_per_item); // offset in FV plaintext
-//    	
-//    PirQuery query = pir_client->generate_query(index);
-//    
-//    for(auto v : query)
-//    	cout << v.size() << "\n";
-//    
-//    auto vec = serialize_pir_query(query);
-//    
-//    for(auto str : vec)
-//    	cout << str.length() << "\n";
-//    	
-//    query = deseralize_pir_query(vec);
-//    
-//    for(auto v : query)
-//    	cout << v.size() << "\n";
-//    	
-//    cout << "___________________________________________\n";
 
     // Setting up rpc server with async callbacks to process rounds information from server
+    
     rpc::server *srv = new rpc::server(RECEIVE_PORT+id);
     srv->bind("rounds_notice", &init_new_round);
     srv->bind("retrieve_notice", &init_msg_retrieval);
@@ -369,6 +362,7 @@ void initialize_client(int id, string master_ip, int master_port)
     cout << "____________________________________________\n";
 }
 
+// create key_e and key_l as the shared secret keys between the two clients
 bool create_comm_keys(int peer_id)
 {
 	auto key = client.rpc_client->call("get_client_key", peer_id).as<vector<unsigned char>>();
@@ -414,6 +408,7 @@ bool create_comm_keys(int peer_id)
 	
 }
 
+// display all available commands
 void display_help()
 {
 	cout << "--------------------\nPossible list of commands\n--------------------\n";
@@ -424,6 +419,7 @@ void display_help()
 	cout << "____________________________________________\n";
 }
 
+//reads input from console and returns what type of input recieved
 command get_command()
 {
 	
@@ -442,17 +438,20 @@ command get_command()
 		return MSG;
 }
 
+// add the message to send to message queue
 void add_to_msgqueue()
 {
 	msgs.push(input);
 	input = "";
 }
 
+//removes the current peer info
 void remove_peer()
 {
 	peer.clear_peer_info();
 }
 
+// removes all sensitive information
 void destroy_keys_and_data()
 {
 	client.rpc_client->call("shutdown_client", client.get_id());
@@ -461,7 +460,6 @@ void destroy_keys_and_data()
 	cout << "Destroying all private information\n";
 	client.clear_client();
 	
-	run = false;
 }
 
 int main(int argc, char **argv) {
@@ -502,14 +500,12 @@ int main(int argc, char **argv) {
 									add_to_msgqueue();
 								break;
 								
-			case QUIT_CHAT: 	//TODO
-								//	- handling when client quit between conversation
-								//  - send quit message to oth client
-								cout << "Ending chat and removing shared keys\n";
+			case QUIT_CHAT: 	cout << "Ending chat and removing shared keys\n";
 								remove_peer();
 								break;
 			
 			case QUIT_CLIENT: 	destroy_keys_and_data();
+								run = false;
 							  	break;
 							  	
 			case HELP:			display_help();

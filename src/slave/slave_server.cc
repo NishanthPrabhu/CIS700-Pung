@@ -10,6 +10,7 @@
 std::vector<server_info> slaves;
 std::string slave_name;
 
+// parses server_list file and returns the slave and master info
 server_info* get_slave_server(std::string server_file, std::string server_name) {
 	std::ifstream filereader(server_file);
 	std::string line;
@@ -46,6 +47,7 @@ server_info* get_slave_server(std::string server_file, std::string server_name) 
 	return info;
 }
 
+// sets up all rpc callbacks and starts the slave server 
 void start_slave_server(server_info *info) {
 	//initialize_pir();
     int port = info->get_port();
@@ -68,7 +70,7 @@ void start_slave_server(server_info *info) {
 
 int main(int argc, char **argv) {
 	if (argc < 3) {
-		std::cerr << "Usage: master_server [server_list_file] [slave{slave id}]" << std::endl;
+		std::cerr << "Usage: slave_server [server_list_file] [slave{slave id}]" << std::endl;
 		exit(1);
 	}
 

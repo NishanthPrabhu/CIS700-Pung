@@ -21,10 +21,9 @@ std::map<std::string, int> label_map;
  * @param publickey
  * @return
  *
- * IMPORTANT: client has to convert libsodiums unsigned char[] public key
- * to a string before sending. easier than dealing with msgpack directly.
- * Size is 32 bytes, so unpacking into a unsigned char array ourselves is easy.
  */
+ 
+// master chooses a slave and passes the params to it to save on all slaves
 bool set_client_public_key(int client_id, std::string const& client_ip,
                            std::vector<unsigned char> const& publickey, std::string const& galoiskey) {
 	std::cout<<"Setting public key"<<std::endl;
@@ -52,6 +51,7 @@ bool set_client_public_key(int client_id, std::string const& client_ip,
     return true;
 }
 
+// returns the client_public_key given its id
 std::vector<unsigned char> get_client_public_key(int client_id) {
 
     std::vector<unsigned char> result;
@@ -77,10 +77,12 @@ std::vector<unsigned char> get_client_public_key(int client_id) {
     return result;
 }
 
+// returns the label mapping during retrieve round when asked by clients
 std::map<std::string, int> get_label_mapping() {
     return label_map;
 }    
 
+// stores the label and the client encrypted message on the slave server
 void store_client_message(std::string label, std::vector<unsigned char>const& message) {
   	
     while (true) {
@@ -104,6 +106,7 @@ void store_client_message(std::string label, std::vector<unsigned char>const& me
     }
 }
 
+// retrieves the PIRReply for the serialized PIRQuery sent by the client
 std::string retrieve_message(int client_id, std::vector<std::string> serializedQuery)
 {
 	while (true) {
@@ -123,6 +126,7 @@ std::string retrieve_message(int client_id, std::vector<std::string> serializedQ
     }
 }
 
+// removes clients public keys when client is shutdown
 void shutdown_client(int client_id) {
     for (int i = 0; i < slaves.size(); i++) {
         server_info slave = slaves[i];

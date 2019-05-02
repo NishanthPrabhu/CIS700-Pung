@@ -17,6 +17,7 @@
 
 std::vector<server_info> slaves;
 
+// reads the server_file containing info of slaves and returns the parsed info
 server_info* get_master_server(std::string server_file) {
 	std::ifstream filereader(server_file);
 	std::string line;
@@ -50,6 +51,7 @@ server_info* get_master_server(std::string server_file) {
 	return info;
 }
 
+// helper function to send rounds/retrieve notice to clients
 void send_rounds_notice_clients(std::string client_function, int round_number, std::vector<unsigned char> nonce) {
     std::string round_id = "round_" + std::to_string(round_number);
 
@@ -108,6 +110,8 @@ int get_label_index() {
     return max_index_elected;
 }    
 
+// helper function to send rounds/retrieve notice to slave so that they reset their data structures for current round
+// or process their database for retrieval queries
 void send_rounds_notice_slaves(std::string slave_function, int round_number) {
     std::string round_id = "round_" + std::to_string(round_number);
     
@@ -129,6 +133,7 @@ void send_rounds_notice_slaves(std::string slave_function, int round_number) {
     }    
 }    
 
+// function to regularly send rounds notice and retrieve notice to clients and slaves
 void round_master(int round_length) {
     int round_number = 0;
 
@@ -153,6 +158,7 @@ void round_master(int round_length) {
     }    
 }    
 
+// returns a slave index in round robin fashion
 int get_slave_index() {
 	int slave_index;
     slave_index = load_balancer_index;
@@ -162,6 +168,7 @@ int get_slave_index() {
     return slave_index;
 }
 
+// initialized the rpc calls and starts the server
 void start_master_server(server_info *info) {
 	int port = info->get_port();
 	rpc::server srv(port);

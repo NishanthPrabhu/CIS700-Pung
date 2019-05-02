@@ -26,6 +26,7 @@ PIRServer *server;
 
 using namespace seal;
 
+//removes the clients info when client issues shutdown notice
 void shutdown_client(int client_id) {
     if (keys_map.find(client_id) != keys_map.end()) {
         client_info &info = keys_map[client_id];
@@ -40,16 +41,15 @@ void shutdown_client(int client_id) {
  * @param publickey
  * @return
  *
- * IMPORTANT: client has to convert libsodiums unsigned char[] public key
- * to a string before sending. easier than dealing with msgpack directly.
- * Size is 32 bytes, so unpacking into a unsigned char array ourselves is easy.
  */
+// sets clients client_id, public key, galois key and ip in its structure
 void set_client_public_key(int client_id, std::string const& client_ip,
                            std::vector<unsigned char> const& publickey, std::string const& galoiskey) {
 	client_info info(client_id, client_ip, publickey, deserialize_galoiskeys(galoiskey));
     keys_map[client_id] = info;
 }
 
+//sets client_info on own machine and propogates it to other clients
 void set_and_propagate_client_public_key(int client_id, std::string const& client_ip,
                                     std::vector<unsigned char> const& publickey, std::string const& galoiskey) {
 	client_info info(client_id, client_ip, publickey, deserialize_galoiskeys(galoiskey));
@@ -76,6 +76,7 @@ void set_and_propagate_client_public_key(int client_id, std::string const& clien
     }
 }
 
+// return public key of a particular client
 std::vector<unsigned char> get_public_key(int client_id) {
 	std::string result;
 
@@ -88,10 +89,12 @@ std::vector<unsigned char> get_public_key(int client_id) {
 	return std::vector<unsigned char>();
 }
 
+// returns the highest index available for label storage
 int send_index_vote() {
     return available_index;
 }    
 
+// resets structures when new round initialized
 void initialize_new_round(std::string round_id) {
     std::cout << "New round alert" << std::endl;
     current_round = round_id;
@@ -99,6 +102,7 @@ void initialize_new_round(std::string round_id) {
     db = std::make_unique<unsigned char[]>(number_of_items * size_per_item);
 }
 
+// stores message in local structures
 void store_message(int index,std::string const& label, std::vector<unsigned char> const& message) {
     available_index = index + 1;
     std::cout << "Label: " << label << std::endl;
@@ -112,6 +116,7 @@ void store_message(int index,std::string const& label, std::vector<unsigned char
     std::cout << "Message stored successfully" << std::endl;
 }
 
+// stores the label and message in local structures and propogates them to other slaves
 void store_and_propagate_message(int index, std::string const& label, std::vector<unsigned char> const& message) {
 	bool result;
     store_message(index, label, message);
@@ -137,12 +142,13 @@ void store_and_propagate_message(int index, std::string const& label, std::vecto
     }
 }
 
+// preprocesses database to get ready for retrieval requests
 void start_retrieve_stage(std::string round_number) {
     server->set_database(db, number_of_items, size_per_item);
     server->preprocess_database();
 }
 
-
+// initialized PIR database adn server
 void initialize_pir() {
     params = new EncryptionParameters(scheme_type::BFV);
     gen_params(number_of_items, size_per_item, N, logt, d, *params, pir_params);
@@ -150,7 +156,7 @@ void initialize_pir() {
     db = std::make_unique<unsigned char[]>(number_of_items * size_per_item);
 }    
 
-
+// process serialized PIRQuery and responds with a serialized PIRReply
 std::string retrieve_message(int client_id, std::vector<std::string> serializedQuery) {
     // Get galois keys of client from map
     GaloisKeys* galois_keys = keys_map[client_id].get_galois_keys(); 
